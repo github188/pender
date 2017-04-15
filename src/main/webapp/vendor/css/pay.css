@@ -1,0 +1,81 @@
+@charset 'utf-8';
+
+body { font-size: 14px; line-height: 1.5; color: #333; font-family: "Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif; margin: 0; }
+ul { margin: 0; padding-left: 0; list-style: none; }
+
+.clearfix:before, .clearfix:after { display: table; content: ' '; }
+.clearfix:after { clear: both; }
+
+.pay-ctn { margin: 0 15px; }
+
+/*关注提示*/
+.concern-tip { margin: 20px 0; }
+.concern-tip .img { float: left; width: 58px; }
+.concern-tip .text { margin-left: 68px; font-size: 12px; color: #999; }
+.concern-tip .text span { display: block; }
+.concern-tip .text span:last-child { text-indent: 10px; }
+
+/*支付成功提示*/
+.success-tip { color: #32a000; font-size: 18px; margin: 20px 0; }
+.fail-tip {color: #666; font-size: 13px; margin-top: 20px;}
+.offline-overlay {position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, .5);}
+.offline-tip {position: absolute; top: 50%; left: 50%; box-sizing: border-box; width: 254px; margin: -50px 0 0 -127px; background-color: #fff; border-radius: 4px;}
+.offline-tip .text {padding: 15px;}
+.offline-tip .btn {line-height: 36px; text-align: center; color: #32a000; border-top: 1px solid #e5e5e5;}
+
+/*商品列表*/
+.good-list { border: 1px solid #e5e5e5; border-radius: 2px; padding: 5px 10px; margin-bottom: 10px; font-size: 13px; }
+.good-list .good { display: -webkit-box; line-height: 1.8; }
+.good-list .good .name { -webkit-box-flex: 1; }
+.good-list .good .num { margin-left: 10px; color: #32a000; }
+
+/*优惠模块*/
+.benefit-list { border: 1px solid #e5e5e5; border-radius: 2px; padding: 5px 10px; margin-bottom: 20px; font-size: 13px; }
+.benefit-list .benefit { display: -webkit-box; line-height: 1.8; }
+.benefit-list .benefit .name { width: 55px; color: #666; }
+.benefit-list .benefit .detail { -webkit-box-flex: 1; }
+.benefit-list .benefit .detail span { color: red; }
+.benefit-list .benefit .detail input { -webkit-appearance: none; width: 100%; border: none; }
+.benefit-list .benefit .detail input:focus { outline: none; }
+.benefit-list .benefit .select { width: 21px; }
+.pay-value { border-top: 1px solid #e9e9e9; padding: 5px 0; margin-top: 5px; font-size: 14px; }
+.pay-value .bene { float: left; color: #666; }
+.pay-value .paid { float: right; }
+.pay-value .paid span { color: red; }
+
+/*支付按钮*/
+.pay-btn { display: block; color: #fff; text-align: center; font-size: 15px; line-height: 40px; border-radius: 2px; background-color: #32a000; -webkit-user-select: none; cursor: pointer; }
+.pay-btn:active { background-color: #45d205; }
+
+/*优惠券列表*/
+.coupon-overlay { position: fixed; left: 0; top: 0; width: 100%; height: 100%; box-sizing: border-box; padding-top: 93px; background-color: rgba(0,0,0,.5); }
+.coupons-close { position: absolute; left: 50%; top: 20px; width: 50px; height: 50px; margin-left: -25px; border: 1px solid #fff; border-radius: 50%; color: #fff; font-size: 30px; text-align: center; line-height: 45px; }
+.coupon-list { height: 100%; padding: 15px; box-sizing: border-box; background-color: #eee; overflow-x: hidden; overflow-y: auto; }
+.coupon-list li { position: relative; margin-bottom: 15px; background-color: #fff; border-radius: 4px; overflow: hidden; }
+.coupon-list li:last-child { margin-bottom: 0; }
+.coupon-list li.cash { color: #32a000; }
+.coupon-list li.cash .line { background-color: #32a000; }
+.coupon-list li.reduce { color: #ff8400; }
+.coupon-list li.reduce .line { background-color: #ff8400; }
+.coupon-list li .body { padding: 8px; }
+.coupon-list li .body .detail { display: -webkit-box; }
+.coupon-list li .body .detail .dsec { -webkit-box-flex: 1; }
+.coupon-list li .body .detail .dsec .about { font-size: 12px; }
+.coupon-list li .body .detail .amount { display: block; font-size: 15px; margin-right: 15px; }
+.coupon-list li .body .detail .amount span { font-size: 40px; line-height: 1; }
+.coupon-list li .body .time { margin-top: 20px; color: #999; font-size: 12px; text-align: right; }
+.coupon-list li .line { height: 5px; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
+.coupon-list li .unusable { position: absolute; top: -11px; right: -13px; transform: rotate(30deg); -webkit-transform: rotate(30deg); font-size: 12px; background-color: #bbb; padding: 13px 10px 2px 30px; }
+
+
+
+
+
+
+
+
+
+
+
+
+

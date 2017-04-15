@@ -1,0 +1,187 @@
+body {font-size: 14px; line-height: 1.5; color: #333; font-family: "Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif; margin: 0; background-color: #f5f5f5;}
+ul {margin: 0; padding-left: 0; list-style: none; }
+p {margin: 0;}
+
+.clearfix:before, .clearfix:after {display: table; content: ' ';}
+.clearfix:after {clear: both;}
+
+/* loading */
+.loading-tip {display: none; position: fixed; left: 50%; top: 50%; z-index: 1000; margin: -25px 0 0 -25px;}
+
+@-webkit-keyframes square-spin {
+  25% {
+    -webkit-transform: perspective(100px) rotateX(180deg) rotateY(0);
+            transform: perspective(100px) rotateX(180deg) rotateY(0);
+            background: #5cb85c; }
+
+  50% {
+    -webkit-transform: perspective(100px) rotateX(180deg) rotateY(180deg);
+            transform: perspective(100px) rotateX(180deg) rotateY(180deg); 
+            background: #f0ad4e; }
+
+  75% {
+    -webkit-transform: perspective(100px) rotateX(0) rotateY(180deg);
+            transform: perspective(100px) rotateX(0) rotateY(180deg);
+            background: #d9534f; }
+
+  100% {
+    -webkit-transform: perspective(100px) rotateX(0) rotateY(0);
+            transform: perspective(100px) rotateX(0) rotateY(0); 
+            background: #5bc0de; } }
+
+@keyframes square-spin {
+  25% {
+    -webkit-transform: perspective(100px) rotateX(180deg) rotateY(0);
+            transform: perspective(100px) rotateX(180deg) rotateY(0);
+            background: #5cb85c; }
+
+  50% {
+    -webkit-transform: perspective(100px) rotateX(180deg) rotateY(180deg);
+            transform: perspective(100px) rotateX(180deg) rotateY(180deg);
+            background: #f0ad4e; }
+
+  75% {
+    -webkit-transform: perspective(100px) rotateX(0) rotateY(180deg);
+            transform: perspective(100px) rotateX(0) rotateY(180deg);
+            background: #d9534f; }
+
+  100% {
+    -webkit-transform: perspective(100px) rotateX(0) rotateY(0);
+            transform: perspective(100px) rotateX(0) rotateY(0);
+            background: #5bc0de; } }
+
+.square-spin > div {
+  -webkit-animation-fill-mode: both;
+          animation-fill-mode: both;
+  width: 50px;
+  height: 50px;
+  -webkit-animation: square-spin 3s 0s cubic-bezier(.09, .57, .49, .9) infinite;
+          animation: square-spin 3s 0s cubic-bezier(.09, .57, .49, .9) infinite; }
+
+/* 箭头 */
+.arrow {height: 8px; width: 8px; border-top: 2px solid #fff; border-left: 2px solid #fff; transform: rotate(135deg); -webkit-transform: rotate(135deg);}
+
+/* tip */
+.cm-tip {position: fixed; left: 0; top: 50%; width: 100%; margin: -50px 0 0 0; box-sizing: border-box; color: #fff; text-align: center;}
+.cm-tip span {display: inline-block; max-width: 80%; box-sizing: border-box; padding: 5px 15px; border-radius: 4px; background-color: rgba(0,0,0,.6);}
+
+/* 加载更多 */
+.load-more {position: absolute; bottom: 0; width: 100%; line-height: 35px; background-color: #e9e9e9; text-align: center;}
+
+/* 登录页 */
+.login .error {display: none; position: fixed; top: 0; width: 100%; line-height: 40px; text-align: center; font-size: 12px; color: #fff; background-color: #f43853;}
+.login .logo {display: block; margin: 80px auto 70px; width: 50%; max-width: 300px;}
+
+.login .form-area {margin: 0 20px;}
+.login .form-item {position: relative;}
+.login .form-item .del {position: absolute; right: 0; height: 100%; width: 50px; background-image: url(../img/del-icon.png); background-position: center; background-size: auto 22px; background-repeat: no-repeat;}
+.login .form-item .icon {position: absolute; height: 100%; width: 50px; background-position: center; background-size: auto 22px; background-repeat: no-repeat;}
+.login .form-item.name .icon {background-image: url(../img/user-name.png);}
+.login .form-item.name .icon.active {background-image: url(../img/user-name-s.png);}
+.login .form-item.password .icon {background-image: url(../img/password.png);}
+.login .form-item.password .icon.active {background-image: url(../img/password-s.png);}
+.login .form-ctrl {box-sizing: border-box; display: block; width: 100%; height: 42px; padding: 0 45px; margin-bottom: 15px; border-radius: 21px; font-size: 14px; color: #f43853; background-color: #fff; border: 1px solid #ccc; outline: none;}
+.login .form-item:last-child .form-ctrl {margin-bottom: 0;}
+.login .form-ctrl.active {border-color: #f43853;}
+
+.login .tip {font-size: 13px; color: #666; margin-left: 30px; margin-top: 5px;}
+.login .login-btn {height: 42px; line-height: 42px; margin: 70px 20px 35px; border-radius: 21px; color: #fff; text-align: center; font-size: 15px; background-color: #f43853;}
+.login .login-btn.disabled {background-color: #ddd;}
+
+/* 店铺经营 */
+.top-tip {position: fixed; top: 0; z-index: 99; width: 100%; height: 36px; font-size: 13px; color: #fff; text-indent: 20px; line-height: 36px; background-color: #f43853;}
+.top-tip .arrow {position: absolute; top: 13px; right: 20px;}
+.top-tip .btn {float: right; text-indent: 0; padding: 0 15px; background-color: #c5162f;}
+
+.date-nav {position: fixed; top: 36px; z-index: 99; width: 100%; height: 30px; border-bottom: 1px solid #eee; background-color: #f2f2f2;}
+.date-nav .item {float: left; width: 33.333%; text-align: center; line-height: 29px;}
+.date-nav .item span {display: inline-block; padding: 0 5px;}
+.date-nav .item.active span {border-bottom: 1px solid #f43853;}
+
+.date-select-ctn {position: fixed; top: 67px; z-index: 99; width: 100%; background-color: #fff;}
+.date-select {-webkit-appearance: none; text-align: center; border: none; box-sizing: border-box; border-bottom: 1px solid #ddd; width: 100%; line-height: 27px;}
+.date-arrow-l {position: absolute; left: 25px; top: 9px; border-color: #ccc; transform: rotate(-45deg); -webkit-transform: rotate(-45deg);}
+.date-arrow-r {position: absolute; right: 25px; top: 9px; border-color: #ccc;}
+
+.sale-data {background-color: #fff;}
+.sale-data-all {display: -webkit-box; line-height: 35px; border-top: 1px solid #eee; padding: 0 5px;}
+.sale-data-all .item {-webkit-box-flex: 1;}
+
+.user-data {background-color: #fff; margin-top: 10px;}
+/*.user-data-all {border-top: 1px solid #eee; text-align: center; line-height: 35px;}
+.user-data-all .item {float: left; width: 50%;}*/
+
+/* 店铺销售排行榜 */
+.store-rank, .product-rank {margin-top: 10px; background-color: #fff;}
+.store-rank .head, .product-rank .head {line-height: 35px; padding-left: 10px; border-bottom: 1px solid #eee; font-size: 13px;}
+.store-rank .head .more, .product-rank .head .more {float: right; padding: 0 10px; color: #f43853;}
+/*.store-rank .head .more:active, .product-rank .head .more:active {color: #f43853;}*/
+
+.st-list .item {display: -webkit-box; border-bottom: 1px solid #e5e5e5; line-height: 38px;}
+.st-list .item:last-child {border-bottom: none;}
+.st-list .item .num {display: block; width: 30px; padding-right: 10px; text-align: right;}
+.st-list .item .name {display: block; -webkit-box-flex: 1; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.st-list .item .amount {display: block; color: #f43853; padding-right: 20px; text-align: right;}
+
+.pro-list .item {display: -webkit-box; border-bottom: 1px solid #e5e5e5; padding: 5px 0;}
+.pro-list .item:last-child {border-bottom: none;}
+.pro-list .item .num {display: block; width: 30px; padding-right: 10px; text-align: right;}
+.pro-list .item .cnn {-webkit-box-flex: 1;}
+.pro-list .item .name {padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.pro-list .item .data {font-size: 12px;}
+.pro-list .item .data span {float: left;}
+.pro-list .item .data .volumn {width: 27%;}
+.pro-list .item .data .amount {width: 38%;}
+.pro-list .item .data .rate {width: 35%;}
+.pro-list .item .data em {font-style: normal; color: #f43853;}
+
+/* 店铺设备列表 */
+.device-ctn {position: fixed; left: 0; top: 0; z-index: 100; width: 100%; height: 100%; background-color: #f5f5f5; margin-left: 100%; transition: all ease-in-out .3s; -webkit-transition: all ease-in-out .3s; overflow: auto;}
+.device-ctn.show {margin-left: 0;}
+.device-all {margin: 8px; margin-top: 44px; background-color: #fff; padding: 5px; box-shadow: 0 0 10px #e5e5e5;}
+
+.store-item {margin: 8px; background-color: #fff; box-shadow: 0 0 10px #e5e5e5;}
+.store-item .t {border-bottom: 1px solid #eee; display: -webkit-box; line-height: 35px;}
+.store-item .t:active {background-color: #e9e9e9;}
+.store-item .t>.input {width: 35px;}
+.store-item .t>.name {-webkit-box-flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.store-item .t>.type {text-align: right; padding-right: 5px; color: #f43853; font-size: 13px;}
+.store-item .b {font-size: 13px; padding: 8px; line-height: 1;}
+.store-item .b label {float: left;}
+.store-item .b span {display: block; margin-left: 65px;}
+
+.device-list {border-bottom: 1px solid #eee;}
+.device-item {margin: 5px 0; font-size: 13px;}
+.device-item:active {background-color: #e9e9e9;}
+.device-item>.input {width: 35px; float: left;}
+.device-item>.name {margin-left: 35px;}
+.device-item>.type {margin-left: 35px;}
+.device-item>.type>label {width: 70px; float: left;}
+.device-item>.type>span {display: block; margin-left: 70px;}
+
+input[name="store"], input[name="device"] {-webkit-appearance: none; border: 1px solid #f43853; width: 20px; height: 20px; margin: 3px 0 0 8px; outline: none;}
+input[name="store"] {position: relative; top: 5px;}
+input[name="store"]:checked, input[name="device"]:checked {background: url(../img/icon-yes.png) no-repeat center/80%;}
+
+/* 设备管理列表 */
+.dev-item {position: relative; margin: 8px; box-shadow: 0 0 10px #ddd; background-color: #fff;}
+.dev-item>div {padding: 0 8px;}
+.dev-item .t {padding-top: 7px;}
+.dev-item .state {float: right;}
+.dev-item .online {color: #32a000;}
+.dev-item .offline {color: #f43853;}
+.dev-item .sign {display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px;}
+.dev-item .online .sign {background-color: #32a000;}
+.dev-item .offline .sign {background-color: #f43853;}
+.dev-item .b {padding-bottom: 8px; font-size: 12px;}
+.dev-item .row {padding: 8px; line-height: 1;}
+.dev-item .row label {float: left;}
+.dev-item .row span {display: block; margin-left: 70px;}
+.dev-item .row em {float: right; color: #f43853; font-size: 12px; font-style: normal; margin-right: 15px;}
+.dev-item .dev {margin: 8px; padding: 0; line-height: 1;}
+.dev-item .arrow {position: absolute; right: 10px; top: 9px; padding: 0; border-color: #ddd;}
+
+
+
+
+

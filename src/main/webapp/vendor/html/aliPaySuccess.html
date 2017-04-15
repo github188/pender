@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<title>支付成功</title>
+	<link rel="stylesheet" type="text/css" href="../css/pay.css">
+	<script type="text/javascript" src="../lib/zepto.min.js"></script>
+	<script type="text/javascript" src="../lib/vue.min.js"></script>
+</head>
+<body>
+	<div class="pay-ctn">
+		<div class="success-tip">
+			<img src="">
+			<span>支付成功</span>
+		</div>
+		<ul id="good-list" class="good-list">
+			<li class="good" v-for="good in goods">
+				<div class="name">{{good.productName}}</div>
+				<div class="num">x{{good.productCount}}</div>
+			</li>
+		</ul>
+		<!-- <ul class="benefit-list">
+			<li class="benefit">
+				<div class="name">交易时间</div>
+				<div class="detail" style="text-align:right;">2016-8-10 14:58</div>
+			</li>
+			<li class="benefit">
+				<div class="name">获得积分</div>
+				<div class="detail" style="text-align:right;">15</div>
+			</li>
+			<li class="pay-value clearfix">
+				<div class="bene">优惠：￥5</div>
+				<div class="paid">实付：<span>￥15.5</span></div>
+			</li>
+		</ul> -->
+		<!--<div class="pay-btn" onclick="closeWindow()">完成</div>-->
+		<div class="fail-tip">如果付款成功后商品没有出货，稍候将自动为您退款，若给您带来了不便，请谅解！</div>
+	</div>
+	<script type="text/javascript">
+        function getContextUrl() {
+            var href = window.location.href;
+            var packageName = "/free/";
+            var contentUrl = href.substring(0, href.indexOf(packageName));
+            return contentUrl;
+        }
+		//获取url中的参数
+		function getUrlArg (argName) {
+			var argStr = location.search.slice(1);
+			if (!argStr) return;
+			var argArr = argStr.split('&');
+			if (!!argName) {
+				for (var i = 0; i < argArr.length; i++) {
+					if (argArr[i].indexOf(argName) !== -1) {
+						return argArr[i].slice(argName.length+1);
+					}
+				}
+				return null;
+			} else {
+				var argObj = {};
+				for (var i = 0; i < argArr.length; i++) {
+					var argItemArr = argArr[i].split('=');
+					argObj[argItemArr[0]] = argItemArr[1];
+				}
+				return argObj;
+			}
+        }
+        //关闭微信浏览器
+		function closeWindow() {
+            
+		}
+
+		var goodlist = new Vue({
+			el: '#good-list',
+			data: {
+				goods: []
+			},
+			methods: {
+				getGoods: function () {
+					goodlist.getGoodsFail = false;
+					var orderNo = getUrlArg("orderNo");
+					$.ajax({
+						type: 'POST',
+						url: getContextUrl() + '/free/syncCartProductInfo.json',
+						data: {orderNo:orderNo},
+						dataType: 'json',
+						success: function(r){
+							if (r.resultCode === 0 && r.data.orderState === 8) {
+								var data = r.data;
+								goodlist.goods = data.products;
+							}
+						}
+
+					})
+				}
+			}
+		});
+
+		//请求商品信息
+		goodlist.getGoods();
+
+	</script>						    	
+</body>
+</html>

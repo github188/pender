@@ -1,0 +1,2 @@
+#文件说明
+production.sh和test.sh分别为生产环境和测试环境部署脚本

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<workbook>
+    <worksheet name="设备">
+        <section startRow="0" endRow="0">  
+        </section> 
+        <loop startRow="1" endRow="1" items="devices" var="dev" varType="com.vendor.po.Device">
+            <section startRow="1" endRow="1">
+                <mapping row="1" col="0">dev.devNo</mapping>
+                <mapping row="1" col="1">dev.typeStr</mapping>
+                <mapping row="1" col="2">dev.model</mapping>
+                <mapping row="1" col="3">dev.cabinetNo</mapping>
+                <mapping row="1" col="4">dev.factoryNo</mapping>
+                <mapping row="1" col="5">dev.factoryTimeStr</mapping>
+                <mapping row="1" col="6">dev.manufacturer</mapping>
+                <mapping row="1" col="7">dev.visiable</mapping>
+            </section>
+            <loopbreakcondition>
+                <rowcheck offset="0">
+                    <cellcheck offset="0"></cellcheck>
+                </rowcheck>
+            </loopbreakcondition>
+        </loop>
+    </worksheet>
+    <worksheet name="激活码">
+        <section startRow="0" endRow="0">  
+        </section> 
+        <loop startRow="1" endRow="1" items="activeCodes" var="code" varType="com.vendor.po.ActiveCode">
+            <section startRow="1" endRow="1">
+                <mapping row="1" col="0">code.activeCode</mapping>
+            </section>
+            <loopbreakcondition>
+                <rowcheck offset="0">
+                    <cellcheck offset="0"></cellcheck>
+                </rowcheck>
+            </loopbreakcondition>
+        </loop>
+    </worksheet>
+</workbook>

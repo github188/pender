@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>翻译求助图片上传</title>
+<style>
+table  {
+  border-collapse:separate;
+  border-spacing:0px 0px;
+}
+@-webkit-keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+@-moz-keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+@keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+.progress {
+    position: absolute;
+    width:150px;
+    height:16px;
+    text-align:center;
+    line-height:16px;
+    border: 1px solid #1483d8;
+    overflow:hidden;
+    border-radius:5px;
+    display:none;
+}
+.progress span.percentage {
+	width:0;
+    height:100%;
+    left:0px;
+    top:0px;
+    background: #1483d8;
+    position:absolute;
+    z-index:0;
+}
+.progress span.text {
+	position:relative;
+    z-index:1;
+    color: #6dbfff;
+    margin:10px 0px;
+}
+.preview-failed {
+	background:url(../scripts/webuploader/icon/bg.png) repeat;
+	z-index:0;
+	width:150px;
+	height:150px;
+	position:relative;
+	float:right;
+	overflow: hidden;
+	font-size: 12px;
+}
+.preview-title {
+	position: absolute;
+    top: 0;
+    left: 0;
+    width:150px;
+    height:80px;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow :ellipsis;
+    top:5px;
+    text-indent:5px;
+    text-align:left;
+    word-wrap:break-word;
+    word-break:break-all;
+}
+.img-wrap {
+	position:relative;
+    z-index:0;
+    line-height: 150px;
+    vertical-align: middle;
+    overflow: hidden;
+    width: 150px;
+    height: 150px;
+    cursor:pointer;
+
+    -webkit-transform-origin: 50% 50%;
+    -moz-transform-origin: 50% 50%;
+    -o-transform-origin: 50% 50%;
+    -ms-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+
+    -webit-transition: 200ms ease-out;
+    -moz-transition: 200ms ease-out;
+    -o-transition: 200ms ease-out;
+    -ms-transition: 200ms ease-out;
+    transition: 200ms ease-out;
+}
+.file-panel {
+	position:absolute;z-index:1;width:100%;height:0px;background:rgba(0,0,0,0.5);top:0;left:0;float:right;filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#80000000', endColorstr='#80000000')\0;overflow:hidden;
+}
+.file-panel span {
+	background:url(../scripts/webuploader/icon/icons.png) no-repeat;width:24px;height:24px;float:right;display:inline;overflow:hidden;cursor:pointer;text-indent:-9999px;margin:3px 1px 1px;
+}
+.file-panel span.rotateLeft {
+	background-position:0px -24px;
+}
+.file-panel span.rotateLeft:hover {
+    background-position:0px 0px;
+}
+.file-panel span.rotateRight {
+	background-position:-24px -24px;
+}
+.file-panel span.rotateRight:hover {
+    background-position:-24px 0px;
+}
+.file-panel span.cancel {
+	background-position:-48px -24px;
+}
+.file-panel span.cancel:hover {
+    background-position:-48px 0px;
+}
+</style>
+<link rel="stylesheet" type="text/css" href="../scripts/webuploader/webuploader.css" />
+<script type="text/javascript" src="../scripts/easyui/jquery.min.js"></script>
+<script type="text/javascript" src="../scripts/webuploader/webuploader.min.js"></script>
+<script type="text/javascript">
+var uploadRoot, uploadImageWidth, uploadImageHieght, imageUploader, queueImages = [], uploadFailed = [], delImageIds = [], imageLimit = 5;
+function initImageUploader(callback, token, imageLimit) {
+    $('#dndArea').attr('style', 'width:' + 160 * imageLimit + 'px');
+    uploadRoot = parent._contextPath ? parent._contextPath : parent.parent._contextPath;
+	imageLimit = imageLimit == undefined ? 5 : imageLimit;
+	server = 'session/data/saveUploadFile.json';
+	imageUploader = WebUploader.create({
+		swf:uploadRoot + '/script/webuploader/Uploader.swf',
+		server:uploadRoot + "/" + server + (token == undefined ? '' : ('?_csrf=' + token)),
+		pick: '#filePicker',
+		dnd:'#dndArea',
+		fileVal:'file',
+		chunked:true,
+	    accept:{title:'预览图片',extensions:'gif,jpg,jpeg,bmp,png',mimeTypes: 'image/gif,image/jpg,image/jpeg,image/bmp,image/png'},
+	    thumb:{quality:70,allowMagnify:false,crop:true},
+	    fileNumLimit:imageLimit,
+	    fileSingleSizeLimit:5 * 1024 * 1024	//5M
+	    //duplicate:true
+	});
+	var divs = $("#filePicker").find("div");
+	$(divs[0]).attr('style','padding:5px 5px;');
+	imageUploader.on('ready', function() {
+        window.uploader = imageUploader;
+    });
+	imageUploader.onFileQueued = function(file) {
+		if (imageLimit === 1) {
+            var imgId = $('#dndArea img').attr('id');
+            if (imgId) {
+                delImageIds.push(imgId.split('_')[1]);
+            }
+		    $('#dndArea').html("");
+        }
+		
+		addUploadImage(file);
+        queueImages.push(file);
+        updateUploadImageState('ready');
+    };
+	imageUploader.onFileDequeued = function(file) {
+        delUploadImage(file);
+    	updateUploadImageState('ready');
+    };
+	imageUploader.onUploadProgress = function(file, percentage) {
+		$('#rateNum').width(percentage * 100 + '%');
+		$('#rateText').text(percentage * 100 + '%');
+    };
+	imageUploader.onUploadError = function(file, reason) {
+		uploadFailed.push(file);
+    };
+	imageUploader.onUploadFinished = function(file) {
+		updateUploadImageState('complete');
+        parent.closeRequestMask();
+        if (callback) {
+        	var info = $('#info').html();
+        	if (uploadFailed.length != 0)
+        		info = info + '</br>上传失败文件：';
+        	for (var i = 0; i < uploadFailed.length; i++) {
+        		if (i < uploadFailed.length - 1)
+        			info = info + '</br>';
+        		info = info + uploadFailed[i].name;
+        	}
+            if (uploadFailed.length < queueImages.length);
+        		callback(imageUploader.option('formData').key, info);
+        }
+        uploadFailed.splice(0, uploadFailed.length);
+    };
+    imageUploader.onError = function(error) {
+        if (error == 'Q_EXCEED_NUM_LIMIT') {
+        	parent.errorMsg('最多只允许上传' + imageLimit + '个文件！');
+        } else if (error == 'Q_EXCEED_SIZE_LIMIT') {
+        	alert('超出最大上传文件大小' + imageUploader.options.fileSingleSizeLimit) + '！';
+        } else if (error == 'Q_TYPE_DENIED') {
+        	alert('不支持上传此文件类型！');
+        }
+        parent.closeRequestMask();
+    };
+}
+function addUploadImage(file) {
+	$('#progress').hide();
+	$('#info').attr('style', 'display:inline-block;font-size:12px;color: #666666;');
+	imageUploader.makeThumb(file, function(error, src) {
+		var wrap = $('<div id="' + file.id + '" style="position:relative;display:inline;float:left;width:150px;height:150px;overflow:hidden;margin:2px 5px 2px;"></div>'), img;
+        if (error) {
+        	img = $('<div class="preview-failed"><div class="preview-title">' + file.name + '</div><p class="img-wrap" style="text-align:center;color:red">不能预览</p></div>');
+        	//img = $('<img class="preview-failed" alt="不能预览">');
+        } else {
+        	img = $('<img id="IMG' + file.id + '" src="' + src + '" class="img-wrap" name="' + file.name + '">');
+        }
+		var tool = $('<div class="file-panel"><span class="cancel"></span><span class="rotateRight"></span><span class="rotateLeft"></span></div>');
+        $('#dndArea').append(wrap);
+        wrap.append(img);
+        wrap.append(tool);
+        wrap.on('mouseenter', function() {
+        	tool.stop().animate({height:24});
+        });
+        wrap.on('mouseleave', function() {
+        	tool.stop().animate({height:0});
+        });
+        $('.img-wrap').click(function(event) {
+    		parent.parent.loadPage($(event.target).attr('id'), $(event.target).attr('name'), uploadRoot + '/free/preview.html?url=' + $(event.target).attr('src'));
+    	});
+        supportTransition = (function(){
+			var s = document.createElement('p').style,
+			r = 'transition' in s || 'WebkitTransition' in s || 'MozTransition' in s || 'msTransition' in s || 'OTransition' in s;
+            s = null;
+            return r;
+        })(),  imageUploader;
+        file.rotation = 0;
+        tool.on( 'click', 'span', function() {
+            var index = $(this).index(),  deg;
+            switch (index) {
+                case 0:
+                    imageUploader.removeFile(file, true);
+                    return;
+                case 1:
+                    file.rotation += 90;
+                    break;
+                case 2:
+                    file.rotation -= 90;
+                    break;
+            }
+            if (supportTransition) {
+                deg = 'rotate(' + file.rotation + 'deg)';
+                img.css({
+                    '-webkit-transform': deg,
+                    '-mos-transform': deg,
+                    '-o-transform': deg,
+                    'transform': deg
+                });
+            } else {
+            	img.css( 'filter', 'progid:DXImageTransform.Microsoft.BasicImage(rotation='+ (~~((file.rotation/90)%4 + 4)%4) +')');
+            }
+        });
+    }, 150, 150);
+}
+function delUploadImage(file) {
+	$('#' + file.id).off().find('.file-panel').off().end().remove();
+	for (var i = 0; i < queueImages.length; i++) {
+		if (queueImages[i].id == file.id) {
+			queueImages.splice(i, 1);
+			break;
+		}
+	}
+}
+function updateUploadImageState(state) {
+    var text = '', stats;
+	var fileSize = 0;
+	for (var i = 0; i < queueImages.length; i++)
+		fileSize += queueImages[i].size;
+    if (state == 'ready') {
+        text = queueImages.length == 0 ? '' : '选中' + queueImages.length + '张图片，共' + WebUploader.formatSize(fileSize);
+    } else if ( state == 'confirm' ) {
+        stats = imageUploader.getStats();
+        if (stats.uploadFailNum)
+            text = '已成功上传' + stats.successNum+ '张图片，' + stats.uploadFailNum + '张图片上传失败，<a class="retry" href="#">重新上传</a>失败图片或<a class="ignore" href="#">忽略</a>';
+    } else {
+        stats = imageUploader.getStats();
+        text = '共' + queueImages.length + '张' +  WebUploader.formatSize(fileSize)  + '，已上传' + stats.successNum + '张';
+        if (stats.uploadFailNum)
+            text += '，失败' + stats.uploadFailNum + '张';
+    }
+    $('#info').html(text);
+}
+function uploadImages(data) {
+	$('#progress').show();
+	parent.openRequestMask();
+    //$('#info').attr('style', 'display:inline-block;font-size:14px;color: #666666;margin:0px 0px 0px 160px;');
+    updateUploadImageState('upload');
+    data.fileIds = delImageIds;
+    imageUploader.option('formData', data);
+    imageUploader.upload();
+}
+function closeImageUploader() {
+    queueImages.splice(0, queueImages.length);
+    delImageIds.splice(0, delImageIds.length);
+	imageUploader.reset();
+	imageUploader.option('fileNumLimit', imageLimit);
+	$('#dndArea').empty();
+	$('#progress').hide();
+	$('#info').html('');
+}
+function loadUploadImage(ids, names, paths) {
+	if (ids && names && paths && ids.length != 0 && names.length != 0 && paths.length != 0) {
+		var url;
+		for (var i = 0; i < names.length; i++) {
+			var file = {id:'LOAD_' + $.trim(ids[i]),name:names[i],src:parent.getFileUrl(paths[i])};
+			addLoadImage(file);
+		}
+		var count = imageUploader.option('fileNumLimit') - names.length;
+		imageUploader.option('fileNumLimit', count);
+	}
+}
+function addLoadImage(file) {
+	$('#progress').hide();
+	$('#info').attr('style', 'display:inline-block;font-size:12px;color: #666666;');
+	var wrap = $('<div id="' + file.id + '" style="position:relative;display:inline;float:left;width:150px;height:150px;overflow:hidden;margin:2px 5px 2px;"></div>'), img;
+    img = $('<img id="IMG' + file.id + '" src="' + file.src + '" class="img-wrap" alt="不能预览" name="' + file.name + '">');
+	var tool = $('<div class="file-panel"><span class="cancel"></span><span class="rotateRight"></span><span class="rotateLeft"></span></div>');
+	$('#dndArea').append(wrap);
+	wrap.append(img);
+	wrap.append(tool);
+	wrap.on('mouseenter', function() {
+		tool.stop().animate({height:24});
+	});
+	wrap.on('mouseleave', function() {
+		tool.stop().animate({height:0});
+	});
+	supportTransition = (function(){
+		var s = document.createElement('p').style,
+		r = 'transition' in s || 'WebkitTransition' in s || 'MozTransition' in s || 'msTransition' in s || 'OTransition' in s;
+        s = null;
+        return r;
+    });
+    file.rotation = 0;
+    tool.on('click', 'span', function() {
+        var index = $(this).index(),  deg;
+        switch (index) {
+            case 0:
+                $('#' + file.id).remove();
+                delImageIds.push(file.id.split('_')[1]);
+                return;
+            case 1:
+                file.rotation += 90;
+                break;
+            case 2:
+                file.rotation -= 90;
+                break;
+        }
+        if (supportTransition) {
+            deg = 'rotate(' + file.rotation + 'deg)';
+            img.css({
+                '-webkit-transform': deg,
+                '-mos-transform': deg,
+                '-o-transform': deg,
+                'transform': deg
+            });
+        } else {
+        	img.css( 'filter', 'progid:DXImageTransform.Microsoft.BasicImage(rotation='+ (~~((file.rotation/90)%4 + 4)%4) +')');
+        }
+    });
+    $('.img-wrap').click(function(event) {
+		parent.parent.loadPage($(event.target).attr('id'), $(event.target).attr('name'), uploadRoot + '/free/preview.html?url=' + $(event.target).attr('src'));
+	});
+}
+</script>
+</head>
+<body>
+<table>
+	<tr>
+        <td style="width:80px;padding:0px 0px;margin:0px 0px;">
+            <span id="filePicker" style="font-size:12px;">选择图片</span>
+        </td>
+        <td>
+            <div id="info" style="display:inline-block;font-size:12px;color: #666666;"></div>
+        </td>
+    </tr>
+	<tr>
+        <td colspan="2">
+            <div id="dndArea"></div>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <div id="progress" class="progress">
+                <span id='rateText' class="text">0%</span>
+                <span id='rateNum' class="percentage"></span>
+            </div>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

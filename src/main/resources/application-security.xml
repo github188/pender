@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<b:beans xmlns="http://www.springframework.org/schema/security" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:b="http://www.springframework.org/schema/beans"
+	xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans classpath:org/springframework/beans/factory/xml/spring-beans-4.1.xsd
+                        http://www.springframework.org/schema/security classpath:org/springframework/security/config/spring-security-4.0.xsd
+                        http://www.springframework.org/schema/security/oauth2 classpath:org/springframework/security/oauth2/spring-security-oauth2-2.0.xsd">
+	<http pattern="/oauth/**" use-expressions="false" create-session="stateless" authentication-manager-ref="oauth2AuthenticationManager">
+		<!-- <intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_ANONYMOUSLY"/> -->
+		<intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_FULLY"/>
+		<anonymous enabled="false"/>
+		<http-basic entry-point-ref="oauth2AuthenticationEntryPoint"/>
+		<custom-filter ref="clientCredentialsTokenEndpointFilter" before="BASIC_AUTH_FILTER"/>
+		<access-denied-handler ref="oauth2AccessDeniedHandler"/>
+		<csrf disabled="true"/>
+	</http>
+	<http pattern="/m/**" use-expressions="false" create-session="never" entry-point-ref="oauth2AuthenticationEntryPoint" access-decision-manager-ref="accessManager">
+		<intercept-url pattern="/m/auth/**" access="IS_AUTHENTICATED_LOGON"/>
+		<intercept-url pattern="/m/free/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<!-- <anonymous enabled="false"/> -->
+		<custom-filter ref="mobileResourceServer" before="PRE_AUTH_FILTER"/>
+		<access-denied-handler ref="oauth2AccessDeniedHandler"/>
+		<csrf disabled="true"/>
+	</http>
+	<http auto-config="false" use-expressions="false" disable-url-rewriting="false" entry-point-ref="authenticationEntryPoint" access-decision-manager-ref="accessManager"><!-- 当访问被拒绝时，会转到403.jsp -->
+		<!-- <intercept-url pattern="/oauth/authorize" access="IS_AUTHENTICATED_ANONYMOUSLY"/> -->
+		<intercept-url pattern="/login.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+
+		<intercept-url pattern="/device/checkDeviceOnlineByFacDevNo" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		
+		<intercept-url pattern="/wechat/login.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/wechat/js/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/wechat/css/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/wechat/img/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+        <intercept-url pattern="/wechat/lib/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		
+		<intercept-url pattern="/vendor/html/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/vendor/lib/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/vendor/css/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/vendor/img/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+
+		<intercept-url pattern="/wechat/**" access="IS_AUTHENTICATED_LOGON"/>
+		<intercept-url pattern="/index.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/index/forward.do" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/marketing/lotteryDetail.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/marketing/lotteryStatistics.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/marketing/lotteryDevices.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/orgnization/userInfo.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/common.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/images/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/scripts/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/page/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/free/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/mobile/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/session/**" access="IS_AUTHENTICATED_LOGON"/>
+		<intercept-url pattern="/interaction/themeLib.jsp" access="IS_AUTHENTICATED_LOGON"/>
+		<intercept-url pattern="/system/user/savePassword.json" access="IS_AUTHENTICATED_LOGON"/>
+		<intercept-url pattern="/login.do" access="IS_AUTHENTICATED_LOGON"/>
+		<intercept-url pattern="/findDeviceLogs.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/findProductLogs.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/findSysData.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/findSalesAndAmount.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/findBestSellerLists.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/findSaleEmptyDevices.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/findStoreSalesList.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/findStoreSalesAmountList.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/findStoreSalesVolumeList.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/product/inventory/**" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/failure.json" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/403.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/404.jsp" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/app.manifest" access="IS_AUTHENTICATED_ANONYMOUSLY"/>
+		<intercept-url pattern="/**" access="IS_AUTHENTICATED_FULLY"/>
+		<!-- <form-login login-page="/login.jsp" authentication-failure-url="/login.jsp?error=true" default-target-url="/login.do"/> -->
+		<logout logout-success-url="/login.jsp" logout-url="/logout" delete-cookies="JSESSIONID"/>
+		<access-denied-handler ref="accessDeniedHandler"/>
+		<session-management session-fixation-protection="none">
+			<concurrency-control max-sessions="20" error-if-maximum-exceeded="true"/>
+		</session-management>
+		<headers>
+			<frame-options policy="SAMEORIGIN"/>
+		</headers>
+		<csrf disabled="true"/>
+		<custom-filter ref="loginFilter"  position="FORM_LOGIN_FILTER" />
+	</http>
+	<b:bean id="authenticationEntryPoint"  class="com.vendor.security.AuthenticationEntryPoint"> 
+		<b:constructor-arg index="0" value="/login.jsp"/>
+		<b:property name="loginMobileUrl" value="/wechat/login.jsp"/>
+		<b:property name="urls">
+			<b:array>
+				<b:value>/wechat/**</b:value>
+			</b:array>
+		</b:property>
+    </b:bean>
+    <b:bean id="loginFilter" class="org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter">  
+        <b:property name="authenticationManager" ref="authenticationManager"/>  
+        <b:property name="authenticationFailureHandler" ref="failureHandler"/>  
+        <b:property name="authenticationSuccessHandler" ref="successHandler"/>  
+    </b:bean>
+    <b:bean id="successHandler"  class="com.vendor.security.AuthenticationSuccessHandler"> 
+		<b:property name="defaultTargetUrl" value="/login.do"/>
+		<b:property name="targetMobileUrl" value="/wechat/session/list.do"/>
+		<b:property name="urls">
+			<b:array>
+				<b:value>/wechat/**</b:value>
+			</b:array>
+		</b:property>
+    </b:bean>
+    <b:bean id="failureHandler"  class="com.vendor.security.AuthenticationFailHandler"> 
+		<b:property name="defaultFailureUrl" value="/login.jsp?error=true"/>
+		<b:property name="defaultMobileUrl" value="/wechat/login.jsp?error=true"/>
+		<b:property name="urls">
+			<b:array>
+				<b:value>/wechat/**</b:value>
+			</b:array>
+		</b:property>
+    </b:bean>
+	<b:bean id="passwordEncoder" class="com.ecarry.core.security.MD5PasswordEncoder"/>
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider ref="authenticationProvider"/>
+	</authentication-manager>
+	<b:bean id="userService" class="com.vendor.security.UserService">
+		<b:property name="genericDao" ref="genericDao"/>
+	</b:bean>
+	<b:bean id="authenticationProvider" class="com.ecarry.core.security.DaoAuthenticationProvider" primary="true">
+		<b:property name="userDetailsService" ref="userService"/>
+		<b:property name="passwordEncoder" ref="passwordEncoder"/>
+		<b:property name="hideUserNotFoundExceptions" value="false"/>
+	</b:bean>
+	<b:bean id="accessManager" class="org.springframework.security.access.vote.AffirmativeBased">
+		<b:constructor-arg index="0">
+			<b:list>
+				<b:bean class="com.ecarry.core.security.AccessValueVoter"/>
+			</b:list>
+		</b:constructor-arg>
+	</b:bean>
+	<b:bean id="accessDeniedHandler" class="com.ecarry.core.security.AccessExceptionHandler">
+		<b:property name="errorPage" value="/403.jsp"/>
+		<b:property name="ajaxError" value="/failure.json"/>
+	</b:bean>
+	<b:bean id="expressionHandler" class="com.ecarry.core.security.AccessExpressionHandler">
+		<b:property name="roleType">
+			<b:bean class="org.springframework.beans.factory.config.FieldRetrievingFactoryBean">
+				<b:property name="staticField" value="com.vendor.util.Commons.ORG_HQ"/>
+			</b:bean>
+		</b:property>
+	</b:bean>
+
+	<!-- OAuth2验证方式 -->
+	<b:bean id="oauth2AuthenticationEntryPoint" class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint"/>
+	<b:bean id="clientCredentialsTokenEndpointFilter" class="com.ecarry.core.security.ClientCredentialsTokenEndpointFilter">
+		<b:constructor-arg index="0" value="/oauth/authorize"/>
+		<b:property name="authenticationManager" ref="tokenAuthenticationManager"/>
+		<b:property name="userAuthenticationManager" ref="oauth2AuthenticationManager"/>
+	</b:bean>
+	<b:bean id="authenticationProcessingFilter" class="org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationProcessingFilter">
+		<b:property name="authenticationManager" ref="oauth2AuthenticationManager"/>
+	</b:bean>
+	<b:bean id="oauth2AccessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
+		<b:constructor-arg index="0">
+			<b:list>
+				<b:bean class="org.springframework.security.access.vote.RoleVoter"/>
+			</b:list>
+		</b:constructor-arg>
+	</b:bean>
+	<authentication-manager id="oauth2AuthenticationManager">
+		<authentication-provider ref="oauthAuthenticationProvider"/>
+	</authentication-manager>
+	<authentication-manager id="tokenAuthenticationManager">
+		<authentication-provider user-service-ref="tokenUserDetailsService"/>
+	</authentication-manager>
+	<b:bean id="tokenUserDetailsService" class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
+		<b:constructor-arg index="0" ref="clientDetailsService"/>
+	</b:bean>
+	<b:bean id="oauthUserService" class="com.vendor.security.OAuthUserService">
+		<b:property name="genericDao" ref="genericDao"/>
+	</b:bean>
+	<b:bean id="oauthAuthenticationProvider" class="com.ecarry.core.security.DaoAuthenticationProvider">
+		<b:property name="userDetailsService" ref="oauthUserService"/>
+		<b:property name="passwordEncoder" ref="passwordEncoder"/>
+		<b:property name="hideUserNotFoundExceptions" value="false"/>
+	</b:bean>
+	<b:bean id="oauth2AccessDeniedHandler" class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler"/>
+	<b:bean id="tokenStore" class="org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore"/>
+	<b:bean id="tokenService" class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
+	    <b:property name="accessTokenValiditySeconds" value="2592000" /><!-- 30d -->
+		<b:property name="tokenStore" ref="tokenStore"/>
+		<b:property name="supportRefreshToken" value="true"/>
+	</b:bean>
+	<!-- <b:bean id="clientDetailsService" class="com.ecarry.core.security.EmptyClientDetailsService"/> -->
+	<oauth:client-details-service id="clientDetailsService">
+		<oauth:client client-id="mobile" authorized-grant-types="password,authorization_code,refresh_token" secret="zyb20151022" scope="read"/>
+		<oauth:client client-id="client" authorized-grant-types="password,authorization_code,refresh_token" secret="zyb2015102201" scope="read,write,trust"/>
+	</oauth:client-details-service>
+	<b:bean id="oauthUserApprovalHandler" class="com.ecarry.core.security.OAuth2UserApprovalHandler"/>
+	<oauth:authorization-server client-details-service-ref="clientDetailsService" token-services-ref="tokenService" user-approval-handler-ref="oauthUserApprovalHandler">
+		<oauth:authorization-code/>
+		<oauth:refresh-token disabled="false"/>
+	</oauth:authorization-server>
+	<oauth:resource-server id="mobileResourceServer" resource-id="mobile-resource" token-services-ref="tokenService"/>
+</b:beans>

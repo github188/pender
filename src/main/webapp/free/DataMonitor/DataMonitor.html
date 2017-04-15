@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>实时监控平台</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no">
+	<style type="text/css">
+		[v-cloak]{opacity: 0;}
+
+		.clearfix:before, .clearfix:after {display: table; content: ' ';}
+		.clearfix:after {clear: both;}
+
+		html, body {height: 100%;}
+		body {font-size: 14px; line-height: 1.5; color: #fff; font-family: "Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif; margin: 0; background: url(img/bg.jpg) no-repeat center/cover; padding: 0.65rem; box-sizing: border-box;}
+
+		.panel {border: 2px solid #1e3146; border-radius: 2px; background-color: rgba(22, 50, 79, 0.6)!important;}
+
+		.page-head {margin-bottom: 1.675rem;}
+		.h-l {float: left; width: 34%; height: 6rem; background: url(img/h-l.png) no-repeat top/contain; font-size: 1.8rem; line-height: 6rem; text-align: center; font-weight: bold; color: #8be2ff; text-shadow: 1px 1px 5px #5ebeec;}
+		.h-r {float: right; width: 34%; height: 6rem; background: url(img/h-r.png) no-repeat top/contain; font-size: 1.5rem; line-height: 6rem; text-align: center; font-weight: bold; color: #8be2ff; text-shadow: 1px 1px 5px #5ebeec;}
+		.h-c {width: 35%; height: 6rem; margin: 0 auto; background: url(img/h-c.png) no-repeat top/contain;}
+
+		.page-left {position: relative; width: 52.5%; float: left;}
+		.page-right {position: relative; width: 46.5%; float: right;}
+
+		.data-panel {position: absolute; left: 0; top: 0; width: 100%;}
+		.data-panel .inner {width: 101.4%; margin-left: -0.7%;}
+		.data-panel .data-item {float: left; width: 25%; }
+		.data-panel .data-item .cnn {box-sizing: border-box; margin: 0 0.325rem; padding: 0.6rem 0 0.5rem; height: 4.85rem; text-align: center;}
+		.data-panel .data-item .cnn label {display: block; font-size: 1rem; color: #07a3ff;}
+		.data-panel .data-item .cnn span {display: block; font-size: 1.5rem;}
+
+		.map-ctn {box-sizing: border-box; height: 100%; padding-top: 5.5rem;}
+		.page-map {box-sizing: border-box; width: 100%; height: 100%;}
+
+		.charts-ctn {position: absolute; left: 0; top: 0; width: 100%;}
+		.charts-panel {width: 49.3%; height: 15rem; box-sizing: border-box;}
+
+		.rank-ctn {box-sizing: border-box; padding-top: 15.65rem; height: 100%;}
+		.rank-ctn .item {float: left; width: 49.3%; height: 100%; box-sizing: border-box; position: relative;}
+		.rank-ctn .item:last-child {float: right;}
+		.rank-ctn .item .head {position: absolute; top: 0; box-sizing: border-box; width: 100%; height: 2.5rem; font-size: 1rem; color: #07a3ff; text-align: center; font-weight: bold; padding: 0.5rem 0; background-color: #0e1f37;}
+		.rank-ctn .pro-item {font-size: 0; background-color: #2b6caf;}
+		.rank-ctn .pro-item span {display: inline-block; width: 20%; box-sizing: border-box; border-right: 1px solid #1e3146; border-bottom: 1px solid #1e3146; font-size: 0.8rem; text-align: center; line-height: 1.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+		.rank-ctn .pro-item span:first-child {width: 40%;}
+		.rank-ctn .pro-item span:last-child {border-right: none;}
+		.rank-ctn .tb {overflow: auto; box-sizing: border-box; padding-top: 4.1rem; height: 100%;}
+		.rank-ctn .tb::-webkit-scrollbar {width: 0}
+		.rank-ctn .tb .pro-item {background-color: transparent;}
+		.rank-ctn .tb .pro-item span {font-size: 0.6rem;}
+	</style>
+	<script type="text/javascript">
+		(function (doc, win) {
+            var docEl = doc.documentElement,
+                resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+                //orientationchange 事件是在用户水平或者垂直翻转设备（即方向发生变化）时触发的事件。
+                //resize事件是屏幕缩放时候触发的事件
+                recalc = function () {
+                    var clientWidth = docEl.clientWidth;
+                    if (!clientWidth) return;
+                    docEl.style.fontSize = clientWidth/96+'px';
+                };
+            if (!doc.addEventListener) return;
+            win.addEventListener(resizeEvt, recalc, false);
+            doc.addEventListener('DOMContentLoaded', recalc, false);
+            /*DOMContentLoaded是firefox下特有的Event, 当所有DOM解析完以后会触发这个事件。
+            DOMContentLoaded事件本身不会等待CSS文件、图片、iframe加载完成。
+            它的触发时机是：加载完页面，解析完所有标签（不包括执行CSS和JS），
+            并如规范中所说的设置interactive和执行每个静态的script标签中的JS，然后触发。
+            而JS的执行，需要等待位于它前面的CSS加载（如果是外联的话）、执行完成，
+            因为JS可能会依赖位于它前面的CSS计算出来的样式。*/
+        })(document, window);
+	</script>
+</head>
+<body id="app">
+	<header id="p-h" class="page-head">
+		<div class="h-l">BangMart智能售货机</div>
+		<div id="h-r" class="h-r"></div>
+		<div class="h-c"></div>
+	</header>
+	<div id="p-l" class="page-left">
+		<div id="d-p" class="data-panel clearfix">
+			<div class="inner">
+				<div class="data-item">
+					<div class="cnn panel">
+						<label>销售额</label>
+						<span v-cloak>{{salesAmount | fixedTwo | addCommas}}</span>
+					</div>
+				</div>
+				<div class="data-item">
+					<div class="cnn panel">
+						<label>销售量</label>
+						<span v-cloak>{{salesQty | addCommas}}</span>
+					</div>
+				</div>
+				<div class="data-item">
+					<div class="cnn panel">
+						<label>新增用户</label>
+						<span v-cloak>{{userCount | addCommas}}</span>
+					</div>
+				</div>
+				<div class="data-item">
+					<div class="cnn panel">
+						<label>店铺数量</label>
+						<span v-cloak>{{storeQty | addCommas}}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="map-ctn">
+			<iframe id="map" class="page-map panel" src="http://112.124.50.120:8074//views/storeShop/map.html"></iframe>
+		</div>
+	</div>
+	<div id="p-r" class="page-right">
+		<div class="charts-ctn clearfix">
+			<div id="dayChart" class="charts-panel panel" style="float:left;"></div>
+			<div id="monthChart" class="charts-panel panel" style="float:right;"></div>
+		</div>
+		<div class="rank-ctn">
+			<div class="item panel">
+				<div class="head">销售产品排行榜</div>
+				<div class="pro-item" style="position:absolute; top:2.5rem; width:100%;">
+					<span>商品名称</span>
+					<span>销售额</span>
+					<span>销售量</span>
+					<span>销售占比</span>
+				</div>
+				<div class="tb" v-cloak>
+					<div class="pro-item" v-for="product in topProducts">
+						<span>{{product.name}}</span>
+						<span>{{product.salesAmount | fixedTwo | addCommas}}</span>
+						<span>{{product.salesVolume}}</span>
+						<span>{{product.salesRate | fixedTwo}}%</span>
+					</div>
+				</div>
+			</div>
+			<div class="item panel">
+				<div class="head">设备列表</div>
+				<div class="pro-item" style="position:absolute; top:2.5rem; width:100%;">
+					<span>设备地址</span>
+					<span>销售额</span>
+					<span>销售量</span>
+					<span>状态</span>
+				</div>
+				<div class="tb">
+					<div class="pro-item" v-for="device in topDevices">
+						<span>{{device.pointAddress}}</span>
+						<span>{{device.salesAmount | fixedTwo | addCommas}}</span>
+						<span>{{device.salesVolume}}</span>
+						<span>{{{device.state | deviceState}}}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../../scripts/easyui/jquery.min.js"></script>
+	<script type="text/javascript" src="../../scripts/echarts.common.min.js"></script>
+	<script type="text/javascript" src="lib/vue.min.js"></script>
+	<script type="text/javascript" src="js/chartOpt.js"></script>
+	<script type="text/javascript">
+		$(function() {
+			var week = ['星期天','星期一','星期二','星期三','星期四','星期五','星期六'];
+			var dayChart = echarts.init(document.getElementById('dayChart'));
+			var monthChart = echarts.init(document.getElementById('monthChart'));
+			//计算左右两块的高度
+			function setPanelHeight() {
+				var $pageHead = $('#p-h');
+				var panelHeight = $('body').height() - $pageHead.outerHeight() - parseInt($pageHead.css('margin-bottom'));
+				$('#p-l, #p-r').height(panelHeight);
+			}
+			$(window).resize(function() {
+				setPanelHeight();
+				dayChart = echarts.init(document.getElementById('dayChart'));
+				monthChart = echarts.init(document.getElementById('monthChart'));
+				dayChart.setOption(dayOpt);
+				monthChart.setOption(monthOpt);
+			})
+			setPanelHeight();
+
+			function getContextUrl(){
+		        var href = window.location.href;
+		        var packageName = "/free/";
+		        var contentUrl = href.substring(0, href.indexOf(packageName));
+		        return contentUrl;
+		    };
+
+		    function getDateRange() {
+		    	var d = new Date;
+		    	var year = d.getFullYear();
+		    	var month = d.getMonth()+1;
+		    	var date = d.getDate();
+				return {
+					startTime: year + '-' + (month<10?'0'+month:month) + '-' + (date<10?'0'+date:date) + ' 00:00:00',
+					endTime: year + '-' + (month<10?'0'+month:month) + '-' + (date<10?'0'+date:date) + ' 23:59:59'
+				}
+			}
+			function getMonthRange() {
+				var d = new Date;
+		    	var year = d.getFullYear();
+		    	var month = d.getMonth()+1;
+				return {
+					startTime: year + '-' + (month<10?'0'+month:month) + '-01 00:00:00',
+					endTime: year + '-' + (month<10?'0'+month:month) + '-' + (new Date(year,month,0).getDate()) + ' 23:59:59'
+				}
+			}
+
+		    function getTimeStr() {
+		    	var d = new Date;
+		    	var year = d.getFullYear();
+		    	var month = d.getMonth()+1;
+		    	var date = d.getDate();
+		    	var day = d.getDay();
+		    	var hour = d.getHours();
+		    	var minute = d.getMinutes();
+		    	var second = d.getSeconds();
+		    	return year + '年' + (month<10?'0'+month:month) + '月' + (date<10?'0'+date:date) + '日' + ' ' + week[day] + ' ' + (hour<10?'0'+hour:hour) + ':' + (minute<10?'0'+minute:minute) + ':' + (second<10?'0'+second:second);
+		    }
+		    function setTime() {
+		    	$('#h-r').html(getTimeStr());
+		    	setTimeout(setTime ,1000);
+		    }
+		    setTime();
+
+		    function getOperData() {
+		    	$.ajax({
+		    		type: 'POST',
+		    		url: getContextUrl() + '/free/findMapOperData.json',
+		    		success: function(r) {
+		    			app.userCount = r.userCount;
+		    			app.salesAmount = r.salesAmount;
+		    			app.salesQty = r.salesQty;
+		    			app.storeQty = r.storeQty;
+		    			app.topDevices = r.topDevices;
+		    			app.topProducts = r.topProducts;
+		    		}
+		    	})
+		    }
+
+		    function getSaleData() {
+		    	var dayRange = getDateRange();
+		    	var monthRange = getMonthRange();
+
+		    	$.ajax({
+		    		type: 'POST',
+		    		data: {startTime: dayRange.startTime, endTime: dayRange.endTime},
+		    		url: getContextUrl() + '/free/findSalesAndAmount.json',
+		    		success: function(r) {
+		    			var orderList = r.orderList;
+		    			var dates = [], amounts = [], volumes = [];
+		    			for (var i = 0; i < orderList.length; i++) {
+		    				dates.push(orderList[i].date);
+		    				amounts.push(orderList[i].salesAmount);
+		    				volumes.push(orderList[i].salesVolume);
+		    			}
+		    			dayOpt.xAxis[0].data = dates;
+						dayOpt.series[0].data = amounts;
+						dayOpt.series[1].data = volumes;
+						dayChart.setOption(dayOpt);
+		    		}
+		    	})
+
+		    	$.ajax({
+		    		type: 'POST',
+		    		data: {startTime: monthRange.startTime, endTime: monthRange.endTime},
+		    		url: getContextUrl() + '/free/findSalesAndAmount.json',
+		    		success: function(r) {
+		    			var orderList = r.orderList;
+		    			var dates = [], amounts = [], volumes = [];
+		    			for (var i = 0; i < orderList.length; i++) {
+		    				dates.push(orderList[i].date);
+		    				amounts.push(orderList[i].salesAmount);
+		    				volumes.push(orderList[i].salesVolume);
+		    			}
+		    			monthOpt.xAxis[0].data = dates;
+						monthOpt.series[0].data = amounts;
+						monthOpt.series[1].data = volumes;
+						monthChart.setOption(monthOpt);
+		    		}
+		    	})
+		    }
+
+		    Vue.filter('deviceState', function(value) {
+		    	return value === 2 ? '<em style="color:red; font-style:normal;">离线</em>' : '正常';
+		    })
+
+		    Vue.filter('fixedTwo', function(num) {
+		    	return num.toFixed(2);
+		    })
+
+		    Vue.filter('addCommas', function(num) {
+		    	num += '';
+				var x = num.split('.');
+				var x1 = x[0];
+				var x2 = x.length > 1 ? '.' + x[1] : '';
+				var rgx = /(\d+)(\d{3})/;
+				while (rgx.test(x1)) {
+				 x1 = x1.replace(rgx, '$1' + ',' + '$2');
+				}
+				return x1 + x2;
+		    })
+
+			var app = new Vue({
+				el: '#app',
+				data: {
+					topDevices: [],
+					topProducts: [],
+					userCount: 0,
+					salesAmount: 0,
+					salesQty: 0,
+					storeQty: 0
+				}
+			})
+
+			function refreahData() {
+				getOperData();
+				getSaleData();
+				setTimeout(refreahData, 10000);
+			}
+			refreahData();
+			
+		})
+	</script>
+</body>
+</html>

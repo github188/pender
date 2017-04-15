@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans classpath:org/springframework/beans/factory/xml/spring-beans-4.0.xsd
+                        http://www.springframework.org/schema/util classpath:org/springframework/beans/factory/xml/spring-util-4.0.xsd
+                        http://www.springframework.org/schema/tx classpath:org/springframework/transaction/config/spring-tx-4.0.xsd">
+	<!-- 乾坤系统数据服务配置 -->
+	<bean id="dataSource"  class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${db.driver}"/>
+		<property name="jdbcUrl" value="${db.url}"/>
+		<property name="user" value="${db.username}"/>
+		<property name="password" value="${db.password}"/>
+		<!--初始化时获取三个连接，取值应在minPoolSize与maxPoolSize之间。Default: 3 -->
+		<property name="initialPoolSize" value="3"/>
+		<!--最大空闲时间,60秒内未使用则连接被丢弃。若为0则永不丢弃。Default: 0 -->
+		<property name="maxIdleTime" value="60"/>
+		<!--连接池中保留的最大连接数。Default: 15 -->
+		<property name="maxPoolSize" value="15"/>
+		<!--定义所有连接测试都执行的测试语句。Default: null-->
+		<!-- <property name="preferredTestQuery" value="select id from test where id=1"/> -->
+	</bean>			
+	<util:list id="packagesToScan">
+		<value>com.ecarry.core.domain</value>
+		<value>com.vendor.vo</value>
+		<value>com.vendor.po</value>
+	</util:list>
+    <bean name="sqlSessionFactory" class="com.ecarry.core.mybatis.SqlSessionFactoryBean">  
+        <property name="dataSource" ref="dataSource" />
+        <property name="jpaPackages" ref="packagesToScan" />
+        <property name="dialect" value="postgresql" />
+        <property name="configLocation" value="classpath:mybatis-config.xml" />  
+    </bean>
+	<bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+	  <!-- 可用,或者;分割多个扫描的包 --> 
+	  <property name="basePackage" value="com.ecarry.core.domain" />
+	  <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+	  <property name="processPropertyPlaceHolders" value="true" />
+	</bean>
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<bean id="txInterceptor" class="org.springframework.transaction.interceptor.TransactionInterceptor">
+		<property name="transactionManager" ref="transactionManager"/>
+		<property name="transactionAttributes">
+			<props>
+				<prop key="load*">PROPAGATION_SUPPORTS</prop>
+				<prop key="find*">PROPAGATION_REQUIRED,readOnly</prop>
+				<prop key="save*">PROPAGATION_REQUIRED</prop>
+				<prop key="add*">PROPAGATION_REQUIRED</prop>
+				<prop key="update*">PROPAGATION_REQUIRED</prop>
+				<prop key="delete*">PROPAGATION_REQUIRED</prop>
+				<prop key="execute*">PROPAGATION_REQUIRED</prop>
+				<prop key="invoke*">PROPAGATION_NEVER</prop>
+			</props>
+		</property>
+	</bean>	
+	<bean id="autoProxyCreator" class="org.springframework.aop.framework.autoproxy.BeanNameAutoProxyCreator">
+	 <property name="interceptorNames">  
+         <list>
+            <value>txInterceptor</value> 
+         </list>  
+      </property> 
+		<property name="beanNames">
+			<list>
+				<value>*Service</value>
+			</list>
+		</property>
+	</bean>
+	<!-- 通用DAO -->
+	<bean id="genericDao" class="com.ecarry.core.dao.impl.PostgreSQLDao">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+</beans>

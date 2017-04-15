@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en" style="height:100%;">
+<head>
+	<meta charset="UTF-8">
+	<title>店铺经营</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../lib/mobiscroll/mobiscroll.core-2.5.2.css">
+    <link rel="stylesheet" type="text/css" href="../lib/mobiscroll/mobiscroll.animation-2.5.2.css">
+    <link rel="stylesheet" type="text/css" href="../lib/mobiscroll/mobiscroll.android-ics-2.5.2.css">
+</head>
+<body style="height:100%;">
+	<div class="store-data">
+		<div id="top-tip" class="top-tip"><span></span><div class="arrow"></div></div>
+		<div id="dateNav" class="date-nav">
+			<div class="item" style="text-align:left;"><span>日数据</span></div>
+			<div class="item"><span>月数据</span></div>
+			<div class="item" style="text-align:right"><span>汇总数据(年)</span></div>
+		</div>
+		<div class="date-select-ctn">
+			<div class="arrow date-arrow-l"></div>
+			<input id="dateSelect" class="date-select" type="text">
+			<div class="arrow date-arrow-r"></div>
+		</div>
+		<div class="sale-data" style="padding-top:96px;">
+			<div id="saleChart"></div>
+			<div class="sale-data-all">
+				<div class="item" style="text-align:left; color:#4466AA;">销售额：<span id="allSalesAmount">0</span></div>
+				<div class="item" style="text-align:center; color:#F43853;">销售量：<span id="allSalesVolume">0</span></div>
+				<div class="item" style="text-align:right; color:#A8CD04;">平均单价：<span id="allAveragePrice">0</span></div>
+			</div>
+		</div>
+		<div class="user-data">
+			<div id="userChart"></div>
+			<!-- <div class="user-data-all clearfix">
+				<div class="item">新用户数：<span id="newUserCount" style="color:#f43853">0</span></div>
+				<div class="item">复购率：<span id="rebuyRate" style="color:#f43853">0</span></div>
+			</div> -->
+			<div class="sale-data-all">
+				<div class="item" style="text-align:left;">总用户数：<span id="allUserCount" style="color:#f43853">0</span></div>
+				<div class="item" style="text-align:center;">新用户数：<span id="newUserCount" style="color:#f43853">0</span></div>
+				<div class="item" style="text-align:right;">复购率：<span id="rebuyRate" style="color:#f43853">0</span></div>
+			</div>
+		</div>
+		<div class="store-rank" style="display:none;">
+			<div class="head">
+				<span>店铺销售排行榜</span>
+				<span id="store-rank-more" class="more" data-rank="store">更多</span>
+			</div>
+			<div id="store-rank-list" class="st-list"></div>
+		</div>
+		<div class="product-rank" style="display:none;">
+			<div class="head">
+				<span>商品销售排行榜</span>
+				<span id="product-rank-more" class="more" data-rank="product">更多</span>
+			</div>
+			<div id="product-rank-list" class="pro-list"></div>
+		</div>
+	</div>
+	<div id="device-ctn" class="device-ctn">
+		<div class="top-tip" style="position:absolute;">请选择您需要查看的店铺或设备<div id="device-confirm" class="btn">确定</div></div>
+		<div style="height:100%;border-top:1px solid #fff;padding-bottom:35px;box-sizing:border-box;overflow:auto;">
+			<div id="device-all" class="device-all">查看全部</div>
+			<div id="store-list"></div>
+		</div>
+		<div id="store-device-more" class="load-more" data-page=2 data-loading=false>加载更多</div>
+	</div>
+	<div id="all-rank-ctn" class="device-ctn">
+		<div class="top-tip" style="position:absolute;"><span></span><div id="all-rank-hide" class="btn">返回</div></div>
+		<div id="all-rank-list" class="" style="height:100%;padding:36px 0 35px;box-sizing:border-box;background-color:#fff;overflow:auto;"></div>
+		<div id="all-rank-more" class="load-more" data-page=2 data-loading=false>加载更多</div>
+	</div>
+	<div id="loading-tip" class="loading-tip">
+		<div class="square-spin inner">
+			<div></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../lib/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/common.js"></script>
+	<script type="text/javascript" src="../lib/template.js"></script>
+	<script type="text/javascript" src="../lib/echarts.common.min.js"></script>
+	<script type="text/javascript" src="../js/chartOpts.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.core-2.5.2.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.core-2.5.2-zh.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.datetime-2.5.1.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.datetime-2.5.1-zh.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.android-ics-2.5.2.js"></script>
+	<script id="storeRank" type="text/html">
+	{{each topStores as item i}}
+		<div class="item">
+			<span class="num">{{i+1}}</span>
+			<span class="name">{{item.name}}</span>
+			<span class="amount">{{item.salesAmount.toFixed(2)}}元</span>
+		</div>
+	{{/each}}
+	</script>
+	<script id="productRank" type="text/html">
+	{{each topProducts as item i}}
+		<div class="item">
+			<span class="num">{{i+1}}</span>
+			<div class="cnn">
+				<div class="name">{{item.name}}</div>
+				<div class="data clearfix">
+					<span class="volumn">销售量：<em>{{item.salesVolume}}</em></span>
+					<span class="amount">销售额：<em>{{item.salesAmount.toFixed(2)}}元</em></span>
+					<span class="rate">销售额占比：<em>{{item.salesRate.toFixed(2)}}%</em></span>
+				</div>
+			</div>
+		</div>
+	{{/each}}
+	</script>
+	<script id="allStoreRank" type="text/html">
+	{{each topStores as item i}}
+		<div class="item">
+			<span class="num">{{(item.page-1)*20+i+1}}</span>
+			<span class="name">{{item.name}}</span>
+			<span class="amount">{{item.salesAmount.toFixed(2)}}元</span>
+		</div>
+	{{/each}}
+	</script>
+	<script id="allProductRank" type="text/html">
+	{{each topProducts as item i}}
+		<div class="item">
+			<span class="num">{{(item.page-1)*20+i+1}}</span>
+			<div class="cnn">
+				<div class="name">{{item.name}}</div>
+				<div class="data clearfix">
+					<span class="volumn">销售量：<em>{{item.salesVolume}}</em></span>
+					<span class="amount">销售额：<em>{{item.salesAmount.toFixed(2)}}元</em></span>
+					<span class="rate">销售额占比：<em>{{item.salesRate.toFixed(2)}}%</em></span>
+				</div>
+			</div>
+		</div>
+	{{/each}}
+	</script>
+	<script id="storeItem" type="text/html">
+	{{each stores as store i}}
+		<div class="store-item">
+			<div class="t">
+				<div class="input"><input type="checkbox" name="store" data-storeno="{{store.pointNo}}" data-name="{{store.pointName}}"></div>
+				<div class="name">店铺名称：{{store.pointName}}</div>
+				<div class="type">{{store.pointType}}</div>
+			</div>
+			<div class="device-list">
+			{{each store.devices as device i}}
+				<div class="device-item">
+					<div class="input"><input type="checkbox" name="device" data-devno="{{device.factoryDevNo}}"></div>
+					<div class="name">设备组号：{{device.factoryDevNo}}</div>
+					<div class="type">
+						<label>设备类型：</label>
+						<span>{{device.typeStr}}</span>
+					</div>
+				</div>
+			{{/each}}
+			</div>
+			<div class="b">
+				<label>店铺地址：</label>
+				<span>{{store.pointAddress}}</span>
+			</div>
+		</div>
+	{{/each}}
+	</script>
+	<script type="text/javascript">
+		$(function() {
+
+			var selectDate = WE.dateFormatter(new Date),  //选择的日期
+				selectMonth = WE.monthFormatter(new Date),//选择的月份
+				selectYear = WE.yearFormatter(new Date);  //选择的年份
+			var factorDevNo = '',//选中设备的设备组号
+				storeNo = '';//选择的店铺的编号
+			var storeName = '';
+
+			//初始化图表容器高度
+			$('#saleChart').height(+($(window).width())/3);
+			$('#userChart').height(+($(window).width())/1.5);
+			var saleChart = echarts.init(document.getElementById('saleChart'));
+			var userChart = echarts.init(document.getElementById('userChart'));
+
+			//初始化日期选择器
+			function initDatePicker(type) {
+				var $dateSelect = $('#dateSelect');
+				$dateSelect.scroller('destroy');
+
+				var opt = {
+					theme: "android-ics light",  
+					preset: 'date',
+					display: 'modal',
+					mode: 'scroller',
+					lang: 'zh',
+					startYear: 2015,
+					endYear: (new Date).getFullYear()
+				}
+
+				if (type === 'date') {
+					opt.onSelect = function(value, inst) {
+						if (new Date(value) > new Date) {
+							WE.showTip('日期大于今日，无法获取数据！');
+							$dateSelect.val(selectDate);
+							return;
+						}
+						selectDate = value;
+						getOperationData(type);
+					};
+					$dateSelect.val('').scroller(opt);
+					$dateSelect.val(selectDate);
+				} else if (type === 'month') {
+					opt.onSelect = function(value, inst) {
+						if (new Date(value + '-01') > new Date) {
+							WE.showTip('月份大于本月，无法获取数据！');
+							$dateSelect.val(selectMonth);
+							return
+						}
+						selectMonth = value;
+						getOperationData(type);	
+					};
+					opt.dateFormat = 'yyyy-mm';
+            		opt.dateOrder = 'yymm';
+					$dateSelect.val('').scroller(opt);
+					$dateSelect.val(selectMonth);
+				} else if (type === 'year') {
+					opt.onSelect = function(value, inst) {
+						selectYear = value;
+						getOperationData(type);
+					};
+					opt.dateFormat = 'yyyy';
+            		opt.dateOrder = 'yy';
+					//$dateSelect.mobiscroll().date(opt);
+					$dateSelect.val('').scroller(opt);
+					$dateSelect.val(selectYear);
+				}
+			}
+
+			//更新头部提示
+			function updateTopTip(storeNum, deviceNum) {
+				var $topTip = $('#top-tip span');
+				if (storeNo === '' && factorDevNo === '') {
+					$topTip.html('您当前共有'+storeNum+'个店铺，'+deviceNum+'组设备');
+				} else if (storeNo !== '') {
+					$topTip.html('您当前正在查看店铺：'+storeName);
+				} else if (factorDevNo !== '') {
+					$topTip.html('您当前正在查看设备：'+factorDevNo);
+				}
+			}
+
+			//更新销售数据
+			function updateSaleData(data) {
+				var dates = [], amounts = [], volumes = [], averages = [];
+				$('#allSalesAmount').html(data.allSalesAmount);
+				$('#allSalesVolume').html(data.allSalesVolume);
+				$('#allAveragePrice').html(data.allAveragePrice);
+				var orderList = data.orderList;
+				for (var i = 0; i < orderList.length; i++) {
+					dates.push(orderList[i].date);
+					amounts.push(orderList[i].salesAmount);
+					volumes.push(orderList[i].salesVolume);
+					averages.push(orderList[i].averagePrice);
+				}
+				saleOpt.xAxis[0].data = dates;
+				saleOpt.series[0].data = amounts;
+				saleOpt.series[1].data = volumes;
+				saleOpt.series[2].data = averages;
+				saleChart.setOption(saleOpt);
+			}
+
+			//更新用户购买数据
+			function updateUserData(data) {
+				var list = [];
+				$('#allUserCount').html(data.allUserCount);
+				$('#newUserCount').html(data.newUserCount);
+				$('#rebuyRate').html(data.rebuyRate+'%');
+				var consumptions = data.consumptions;
+				for (var i = 0; i < consumptions.length; i++) {
+					if (consumptions[i].userCount === 0) continue;
+					list.push({name: consumptions[i].name, value: consumptions[i].userCount});
+				}
+				userOpt.series[0].data = list;
+				userChart.setOption(userOpt);
+			}
+
+			//更新店铺排行榜
+			function updateStoreRank(storeRank) {
+				var $storeRank = $('#store-rank-list').parents('.store-rank');
+				if (storeRank.length === 0) {
+					$storeRank.hide();
+					return;
+				}
+				// if (storeRank.length === 10) {
+				// 	$storeRank.find('.more').show();
+				// } else {
+				// 	$storeRank.find('.more').hide();
+				// }
+				var rankHTML = template('storeRank', {topStores: storeRank});
+                $('#store-rank-list').html(rankHTML);
+                $storeRank.show();
+			}
+
+			//更新商品排行榜
+			function updateProductRank(productRank) {
+				var $productRank = $('#product-rank-list').parents('.product-rank');
+				if (productRank.length === 0) {
+					$productRank.hide();
+					return;
+				}
+				// if (productRank.length === 10) {
+				// 	$productRank.find('.more').show();
+				// } else {
+				// 	$productRank.find('.more').hide();
+				// }
+				var rankHTML = template('productRank', {topProducts: productRank});
+                $('#product-rank-list').html(rankHTML);
+                $productRank.show();
+			}
+
+			//更新店铺运营所有数据
+			function getOperationData(type) {
+				if (type === 'date') {
+					var range = WE.getDateRange(selectDate);
+				} else if (type === 'month') {
+					var range = WE.getMonthRange(selectMonth);
+				} else if (type === 'year') {
+					var range = WE.getYearRange(selectYear);
+				}
+
+				var params = {startTime: range.startTime, endTime: range.endTime, page: 1, rows: 10, storeNo: storeNo, factorDevNo: factorDevNo};
+
+				$('#loading-tip').fadeIn();
+				$.ajax({
+					type: 'POST',
+					url: WE.getBaseURL() + '/wechat/findStoreOperData.json',
+					data: params,
+					success: function(data) {
+						updateTopTip(data.storeQty, data.devQty);
+						updateSaleData(data.saleData);
+						updateUserData(data.consumerData);
+						updateStoreRank(data.topStores);
+						updateProductRank(data.topProducts);
+						$('#loading-tip').stop().hide();
+					}
+				})
+			}
+
+			//切换数据范围
+			$('#dateNav').on('click', '.item span', function() {
+				var type;
+				var types = ['date', 'month', 'year'];
+				var $item = $(this).parent();
+				var index = $item.index();
+
+				type = types[index];
+
+				$item.addClass('active').siblings().removeClass('active');
+
+				initDatePicker(type);
+
+				getOperationData(type);
+			})
+
+			//获取更多排行榜数据
+			function loadRankData(page, rankType) {
+				var type;
+				var types = ['date', 'month', 'year'];
+				var $item = $('#dateNav .active');
+				var index = $item.index();
+				type = types[index];
+
+				if (type === 'date') {
+					var range = WE.getDateRange(selectDate);
+				} else if (type === 'month') {
+					var range = WE.getMonthRange(selectMonth);
+				} else if (type === 'year') {
+					var range = WE.getYearRange(selectYear);
+				}
+				var params = {startTime: range.startTime, endTime: range.endTime, page: page, rows: 20, storeNo: storeNo, factorDevNo: factorDevNo};
+
+				var $loader = $('#all-rank-more');
+				$loader.data('loading', true).html('加载中');
+				$('#loading-tip').fadeIn();
+				$.ajax({
+					type: 'POST',
+					url: WE.getBaseURL() + '/wechat/findStoreOperData.json',
+					data: params,
+					success: function(data) {
+						if (rankType === 'store') {
+							$('#all-rank-list').removeClass('pro-list').addClass('st-list');
+							$('#all-rank-ctn .top-tip span').html('店铺销售排行榜');
+							//加上页码
+							for (var i = 0; i < data.topStores.length; i++) {
+								data.topStores[i].page = page;
+							}
+							var rankHTML = template('allStoreRank', data);
+						} else if (rankType === 'product') {
+							$('#all-rank-list').removeClass('st-list').addClass('pro-list');
+							$('#all-rank-ctn .top-tip span').html('商品销售排行榜');
+							//加上页码
+							for (var i = 0; i < data.topProducts.length; i++) {
+								data.topProducts[i].page = page;
+							}
+							var rankHTML = template('allProductRank', data);
+						}
+						$('#all-rank-list').append(rankHTML);
+						$('#loading-tip').stop().hide();
+						if ((rankType === 'store' && data.topStores.length < 20) || (rankType === 'product' && data.topProducts.length < 20)) {
+            				$loader.html('已加载所有数据');
+            				return;
+            			}
+            			$loader.data('loading', false).html('加载更多');
+					}
+				})
+			}
+			
+			//点击更多打开排行榜窗口
+			$('#store-rank-more, #product-rank-more').click(function() {
+				$('body').css('overflow', 'hidden');
+				$('#all-rank-ctn').addClass('show');
+				var rankType = $(this).data('rank');
+				$('#all-rank-more').data('rank', rankType);
+				loadRankData(1, rankType);
+			})
+
+			//加载更多排行榜数据
+			$('#all-rank-more').click(function() {
+				var page = $(this).data('page');
+				var rankType = $(this).data('rank');
+				var isloading = $(this).data('loading');
+				if (!isloading) {
+					loadRankData(page, rankType);
+					$(this).data('page', page+1);
+				}
+			})
+
+			//关闭排行榜窗口
+			$('#all-rank-hide').click(function() {
+				$('body').css('overflow', 'auto');
+				$('#all-rank-ctn').removeClass('show');
+				$('#all-rank-list').html('');
+				$('#all-rank-more').data('loading', false).data('page', 2);
+			})
+
+			//加载店铺数据
+			function loadStoreAndDevice(page) {
+				//加载店铺设备列表
+				var $loader = $('#store-device-more');
+				$loader.data('loading', true).html('加载中');
+				$('#loading-tip').fadeIn();
+				$.ajax({
+					type: 'POST',
+					data: {page: page, rows: 20},
+					url: WE.getBaseURL() + '/wechat/findStoreDevices.json',
+					success: function(data) {
+						var storeTypes = ['小区', '学校', '写字楼', '酒店', '医院', '火车站/高铁站', '汽车站', '机场', '地铁站', '运动场', '会所']; //1小区 2学校 3写字楼 4酒店 5医院 6火车站/高铁站 7 汽车站 8 机场 9地铁站 10运动场 11 会所
+						for (var i = 0; i < data.length; i++) {
+							data[i].pointType = storeTypes[data[i].pointType];
+						}
+						var html = template('storeItem', {stores: data});
+            			$('#store-list').append(html);
+            			$('#loading-tip').stop().hide();
+            			if (data.length < 20) {
+            				$loader.html('已加载所有数据');
+            				return;
+            			}
+            			$loader.data('loading', false).html('加载更多');
+					}
+				})
+			}
+
+			//展开店铺列表
+			$('#top-tip').click(function() {
+				$('body').css('overflow', 'hidden');
+				$('#device-ctn').addClass('show');
+				if ($('#store-list').children('.store-item').length === 0) {
+					loadStoreAndDevice(1);
+				}
+			})
+
+			//加载更多店铺
+			$('#store-device-more').click(function() {
+				var $this = $(this);
+				var page = $this.data('page');
+				var isloading = $this.data('loading');
+				if (!isloading) {
+					loadStoreAndDevice(page);
+					$this.data('page', page+1);
+				}
+			})
+
+			//勾选店铺、设备
+			$('#device-ctn').on('click', 'input[name="store"], input[name="device"]', function(e) {
+				e.stopPropagation();
+				$('#store-list').find('input[name="store"], input[name="device"]').not(this).prop('checked', false);
+			})
+			$('#device-ctn').on('click', '.t', function() {
+				$(this).find('input[name="store"]').trigger('click');
+			})
+			$('#device-ctn').on('click', '.device-item', function() {
+				$(this).find('input[name="device"]').trigger('click');
+			})
+
+			//确定选择店铺或设备
+			$('#device-confirm').click(function() {
+				$('body').css('overflow', 'auto');
+				$('#device-ctn').removeClass('show');
+				storeNo = '';
+				storeName = '';
+				factorDevNo = '';
+				var $checkedStore = $('#store-list input[name="store"]:checked');
+				var $checkedDevice = $('#store-list input[name="device"]:checked');
+				if ($checkedStore.length === 0 && $checkedDevice.length === 0) {
+					//相当于查看全部
+					$('#device-all').trigger('click');
+					return;
+				} else if ($checkedDevice.length !== 0) {
+					factorDevNo = $checkedDevice.data('devno');
+				} else if ($checkedStore.length !== 0) {
+					storeName = $checkedStore.data('name');
+					storeNo = $checkedStore.data('storeno');
+				}
+
+				var type;
+				var types = ['date', 'month', 'year'];
+				var $item = $('#dateNav .active');
+				var index = $item.index();
+				type = types[index];
+				getOperationData(type);
+			})
+
+			//查看全部店铺数据
+			$('#device-all').click(function() {
+				$('body').css('overflow', 'auto');
+				$('#device-ctn').removeClass('show');
+				$('#store-list').find('input[name="store"], input[name="device"]').prop('checked', false);
+				storeNo = '';
+				storeName = '';
+				factorDevNo = '';
+
+				var type;
+				var types = ['date', 'month', 'year'];
+				var $item = $('#dateNav .active');
+				var index = $item.index();
+				type = types[index];
+				getOperationData(type);
+			})
+
+			//首次取数据
+			$('#dateNav .item span').eq(0).trigger('click');
+
+		})
+	</script>
+</body>
+</html>

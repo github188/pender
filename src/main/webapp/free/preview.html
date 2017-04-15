@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>预览图片</title>
+<link rel="stylesheet" type="text/css" href="../scripts/easyui/themes/default/easyui.css"/>
+<script type="text/javascript" src="../scripts/easyui/jquery.min.js"></script>
+<script type="text/javascript" src="../scripts/easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../scripts/easyui/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript">
+$(function() {
+	$('#previewImage').attr('src', getUrlParam('url'));
+});
+function getUrlParam(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+    var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+    if (r != null)
+    	return unescape(r[2]);
+    return null; //返回参数值
+}
+</script>
+</head>
+<body class="easyui-layout">
+<div data-options="region:'center',border:false">
+<table style="margin-top:10px;margin-right:auto;margin-bottom:10px;margin-left:auto;padding:0px;cellpadding:0;cellspacing:0;">
+	<tr><td><img id="previewImage"></td></tr>
+</table>
+</div>
+</body>
+</html>

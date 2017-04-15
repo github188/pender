@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>翻译求助图片上传</title>
+<style>
+table  {
+  border-collapse:separate;
+  border-spacing:0px 0px;
+}
+@-webkit-keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+@-moz-keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+@keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+.progress {
+    position: absolute;
+    width:150px;
+    height:16px;
+    text-align:center;
+    line-height:16px;
+    border: 1px solid #1483d8;
+    overflow:hidden;
+    border-radius:5px;
+    display:none;
+}
+.progress span.percentage {
+	width:0;
+    height:100%;
+    left:0px;
+    top:0px;
+    background: #1483d8;
+    position:absolute;
+    z-index:0;
+}
+.progress span.text {
+	position:relative;
+    z-index:1;
+    color: #6dbfff;
+    margin:10px 0px;
+}
+
+.file-panel {
+    position:absolute;z-index:1;width:100%;height:0px;background:rgba(0,0,0,0.5);top:0;left:0;float:right;filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#80000000', endColorstr='#80000000')\0;overflow:hidden;
+}
+.file-panel span {
+    background:url(../scripts/webuploader/icon/icons.png) no-repeat;width:24px;height:24px;float:right;display:inline;overflow:hidden;cursor:pointer;text-indent:-9999px;margin:3px 1px 1px;
+}
+.file-panel span.rotateLeft {
+    background-position:0px -24px;
+}
+.file-panel span.rotateLeft:hover {
+    background-position:0px 0px;
+}
+.file-panel span.rotateRight {
+    background-position:-24px -24px;
+}
+.file-panel span.rotateRight:hover {
+    background-position:-24px 0px;
+}
+.file-panel span.cancel {
+    background-position:-48px -24px;
+}
+.file-panel span.cancel:hover {
+    background-position:-48px 0px;
+}
+</style>
+<link rel="stylesheet" type="text/css" href="../scripts/webuploader/webuploader.css" />
+<script type="text/javascript" src="../scripts/easyui/jquery.min.js"></script>
+<script type="text/javascript" src="../scripts/webuploader/webuploader.min.js"></script>
+<script type="text/javascript">
+var uploadRoot, excelUploader, queueExcels = [], uploadFailed = [], delExcelIds = [], excelLimit = 1;
+function initExcelUploader(callback, token, excelLimit) {
+    $('#dndArea').attr('style', 'width:' + 160 * excelLimit + 'px');
+    uploadRoot = parent._contextPath ? parent._contextPath : parent.parent._contextPath;
+	excelLimit = excelLimit == undefined ? 5 : excelLimit;
+	server = 'session/data/saveUploadFile.json';
+	excelUploader = WebUploader.create({
+		swf:uploadRoot + '/script/webuploader/Uploader.swf',
+		server:uploadRoot + "/" + server + (token == undefined ? '' : ('?_csrf=' + token)),
+		pick: '#filePicker',
+		dnd:'#dndArea',
+		fileVal:'file',
+		chunked:true,
+	    accept:{title:'预览图片',extensions:'xls,xlsx'},
+	    thumb:{quality:70,allowMagnify:false,crop:true},
+	    fileNumLimit:excelLimit,
+	    fileSingleSizeLimit:50 * 1024 * 1024	//50M
+	    //duplicate:true
+	});
+	var divs = $("#filePicker").find("div");
+	$(divs[0]).attr('style','padding:5px 5px;');
+	excelUploader.on('ready', function() {
+        window.uploader = excelUploader;
+    });
+	excelUploader.onFileQueued = function(file) {
+		addUploadImage(file);
+        queueExcels.push(file);
+        updateUploadExcelState('ready');
+    };
+	excelUploader.onFileDequeued = function(file) {
+        delUploadExcel(file);
+    	updateUploadExcelState('ready');
+    };
+	excelUploader.onUploadProgress = function(file, percentage) {
+		$('#rateNum').width(percentage * 100 + '%');
+		$('#rateText').text(percentage * 100 + '%');
+    };
+	excelUploader.onUploadError = function(file, reason) {
+		uploadFailed.push(file);
+    };
+	excelUploader.onUploadFinished = function(file) {
+		updateUploadExcelState('complete');
+        parent.closeRequestMask();
+        if (callback) {
+        	var info = $('#info').html();
+        	if (uploadFailed.length != 0)
+        		info = info + '</br>上传失败文件：';
+        	for (var i = 0; i < uploadFailed.length; i++) {
+        		if (i < uploadFailed.length - 1)
+        			info = info + '</br>';
+        		info = info + uploadFailed[i].name;
+        	}
+            if (uploadFailed.length < queueExcels.length);
+        		callback(excelUploader.option('formData').key, info);
+        }
+        uploadFailed.splice(0, uploadFailed.length);
+    };
+    excelUploader.onError = function(error) {
+        if (error == 'Q_EXCEED_NUM_LIMIT') {
+        	parent.errorMsg('最多只允许上传' + excelLimit + '个文件！');
+        } else if (error == 'Q_EXCEED_SIZE_LIMIT') {
+        	parent.errorMsg('超出最大上传文件大小' + excelUploader.options.fileSingleSizeLimit) + '！';
+        } else if (error == 'Q_TYPE_DENIED') {
+        	parent.errorMsg('不支持上传此文件类型！');
+        }
+        parent.closeRequestMask();
+    };
+}
+function addUploadImage(file) {
+	$('#progress').hide();
+	$('#info').attr('style', 'display:inline-block;font-size:14px;color: #666666;');
+	var wrap = $('<div id="' + file.id + '" style="position:relative;display:inline;float:left;width:150px;height:50px;overflow:hidden;margin:2px 5px 2px;"></div>'), excel;
+    excel = $('<div class="preview-success"><div class="preview-title">' + file.name + '</div></div>');
+	var tool = $('<div class="file-panel"><span class="cancel"></span></div>');
+       $('#dndArea').append(wrap);
+       wrap.append(excel);
+       wrap.append(tool);
+       wrap.on('mouseenter', function() {
+       	tool.stop().animate({height:24});
+       });
+       wrap.on('mouseleave', function() {
+       	tool.stop().animate({height:0});
+       });
+       file.rotation = 0;
+       tool.on( 'click', 'span', function() {
+           var index = $(this).index(),  deg;
+           switch (index) {
+               case 0:
+                   excelUploader.removeFile(file, true);
+                   return;
+           }
+       });
+}
+function delUploadExcel(file) {
+	$('#' + file.id).off().find('.file-panel').off().end().remove();
+	for (var i = 0; i < queueExcels.length; i++) {
+		if (queueExcels[i].id == file.id) {
+			queueExcels.splice(i, 1);
+			break;
+		}
+	}
+}
+function updateUploadExcelState(state) {
+    var text = '', stats;
+	var fileSize = 0;
+	for (var i = 0; i < queueExcels.length; i++)
+		fileSize += queueExcels[i].size;
+    if (state == 'ready') {
+        text = queueExcels.length == 0 ? '' : '选中' + queueExcels.length + '个文件，共' + WebUploader.formatSize(fileSize);
+    } else if ( state == 'confirm' ) {
+        stats = excelUploader.getStats();
+        if (stats.uploadFailNum)
+            text = '已成功上传' + stats.successNum+ '个文件，' + stats.uploadFailNum + '个文件上传失败，<a class="retry" href="#">重新上传</a>失败文件或<a class="ignore" href="#">忽略</a>';
+    } else {
+        stats = excelUploader.getStats();
+        text = '共' + queueExcels.length + '个' +  WebUploader.formatSize(fileSize)  + '，已上传' + stats.successNum + '个';
+        if (stats.uploadFailNum)
+            text += '，失败' + stats.uploadFailNum + '个';
+    }
+    $('#info').html(text);
+}
+function uploadExcels(data) {
+	$('#progress').show();
+	parent.openRequestMask();
+    $('#info').attr('style', 'display:inline-block;font-size:14px;color: #666666;margin:0px 0px 0px 160px;');
+    updateUploadExcelState('upload');
+    data.fileIds = delExcelIds;
+    excelUploader.option('formData', data);
+    excelUploader.upload();
+}
+function closeExcelUploader() {
+    queueExcels.splice(0, queueExcels.length);
+    delExcelIds.splice(0, delExcelIds.length);
+	excelUploader.reset();
+	excelUploader.option('fileNumLimit', excelLimit);
+	$('#dndArea').empty();
+	$('#progress').hide();
+	$('#info').html('');
+}
+</script>
+</head>
+<body>
+<table>
+	<tr><td style="width:80px;padding:0px 0px;margin:0px 0px;"><span id="filePicker" style="font-size:12px;">请选择excel</span></td><td><div id="progress" class="progress"><span id='rateText' class="text">0%</span><span id='rateNum' class="percentage"></span></div><div id="info" style="display:inline-block;font-size:14px;color: #666666;"></div></td></tr>
+	<tr><td colspan="2"><div id="dndArea"></div></td></tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ehcache.xsd" updateCheck="true" monitoring="autodetect" dynamicConfig="true">
+	<diskStore path="java.io.tmpdir"/>
+	<defaultCache maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="120" timeToLiveSeconds="120" diskSpoolBufferSizeMB="30" maxElementsOnDisk="10000000"
+		diskExpiryThreadIntervalSeconds="120" memoryStoreEvictionPolicy="LRU">
+	</defaultCache>
+	<cache name="SYS_TYPE_CACHE" eternal="false" maxElementsInMemory="1000" maxElementsOnDisk="0">
+		<searchable>
+			<searchAttribute name="type" type="java.lang.String"/>
+			<searchAttribute name="code" type="java.lang.String"/>
+		</searchable>
+	</cache>
+	<cache name="ORG_CACHE" eternal="false" maxElementsInMemory="5000" maxElementsOnDisk="0">
+		<searchable>
+			<searchAttribute name="code" type="java.lang.String"/>
+		</searchable>
+	</cache>
+	<cache name="COUNTRY_CACHE" eternal="false" maxElementsInMemory="100" maxElementsOnDisk="0">
+		<searchable>
+			<searchAttribute name="word3" type="java.lang.String"/>
+		</searchable>
+	</cache>
+	<cache name="CURRENCY_CACHE" eternal="false" maxElementsInMemory="100" maxElementsOnDisk="0">
+		<searchable>
+			<searchAttribute name="code" type="java.lang.String"/>
+		</searchable>
+	</cache>
+	<cache name="CATEGORY_CACHE" eternal="false" maxElementsInMemory="10000" maxElementsOnDisk="0">
+		<searchable>
+			<searchAttribute name="code" type="java.lang.String"/>
+			<searchAttribute name="parentCode" type="java.lang.String"/>
+		</searchable>
+	</cache>
+</ehcache>

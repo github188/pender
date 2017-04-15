@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans classpath:org/springframework/beans/factory/xml/spring-beans-4.0.xsd">
+	
+	<!-- 总管理类 如果将 lazy-init='false'那么容器启动就会执行调度程序  -->
+	<bean id="quertzManager" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" lazy-init="true" autowire="no" destroy-method="stop">
+		<property name="triggers">
+			<array>
+<!--				<ref bean="syncCacheTrigger"/> -->
+<!--				<ref bean="updateAdvStateTrigger"/> -->
+<!--				<ref bean="updateRefundStateTrigger"/> -->
+<!--				<ref bean="updateDeviceStateTrigger"/> -->
+<!--				<ref bean="updateDiscountStateTrigger"/> -->
+<!--				<ref bean="updateOfflineTrigger"/> -->
+<!-- 				<ref bean="updateLotteryTrigger"/> -->
+
+<!-- 				<ref bean="changeOrderMapTrigger"/> -->
+<!-- 				<ref bean="createOrderTrigger"/> -->
+				<!--<ref bean="updateThemeTrigger"/>-->
+				<!--<ref bean="timingRefundTaskTrigger"/>-->
+<!--				<ref bean="updateThemeTrigger"/>-->
+				<!--<ref bean="updateMonitoringTrigger"/>-->
+
+			</array>
+		</property>
+	</bean>
+	<bean id="syncCacheTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="syncCacheTask"/>
+		<!-- 每天早晨5点执行 -->
+		<property name="cronExpression" value="0 0 5 * * ?"/>
+	</bean>
+	<bean id="syncCacheTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="dictionaryService"/>
+		<property name="targetMethod" value="executeSyncData"/>
+	</bean>
+
+    <!-- 定时任务更新广告的状态 -->
+	<bean id="updateAdvStateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="updateAdvStateTask"/>
+		<!-- 每隔一分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="updateAdvStateTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="productService"/>
+		<property name="targetMethod" value="updateAdvState"/>
+	</bean>
+
+    <!-- 定时任务更新退款的状态 -->
+	<bean id="updateRefundStateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="updateRefundStateTask"/>
+		<!-- 每隔一分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="updateRefundStateTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="operationService"/>
+		<property name="targetMethod" value="saveRefundStateJob"/>
+	</bean>
+
+
+	<!-- 定时任务更新退款的状态(支付宝) -->
+	<bean id="timingRefundTaskTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="timingRefundTask"/>
+		<!-- 每隔一分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="timingRefundTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="refundService"/>
+		<property name="targetMethod" value="timingRefund"/>
+		<property name="concurrent" value="false" />
+	</bean>
+
+    <!-- 定时任务更新设备的状态 -->
+	<bean id="updateDeviceStateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="updateDeviceStateTask"/>
+		<!-- 每隔1分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="updateDeviceStateTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="vendingService"/>
+		<property name="targetMethod" value="saveDeviceStateJob"/>
+	</bean>
+	
+	
+	 <!-- 定时任务更新打折活动的状态 -->
+	<bean id="updateDiscountStateTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="updateDiscountStateTask"/>
+		<!-- 每隔1分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="updateDiscountStateTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="discountService"/>
+		<property name="targetMethod" value="updateDiscountStateJob"/>
+	</bean>
+	
+	 <!-- 定时任务执行没有完成的离线任务 -->
+	<bean id="updateOfflineTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="updateOfflineStateTask"/>
+		<!-- 每隔1分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="updateOfflineStateTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="discountService"/>
+		<property name="targetMethod" value="updateOfflineStateJob"/>
+	</bean>
+	
+	<!-- 定时改变订单生成时间 -->
+    <bean id="changeOrderMapTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="changeOrderMapTask"/>
+        <!-- 每隔1小时 -->
+        <property name="cronExpression" value="0 0 0/1 * * ?"/>
+    </bean>
+    <bean id="changeOrderMapTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="vendingService"/>
+        <property name="targetMethod" value="changeOrderMapJob"/>
+    </bean>
+
+    <!-- 定时生成演示用订单数据 -->
+    <bean id="createOrderTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="createOrderTask"/>
+        <!-- 每隔5秒 -->
+        <property name="cronExpression" value="0/5 * * * * ?"/>
+    </bean>
+    <bean id="createOrderTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="vendingService"/>
+        <property name="targetMethod" value="createOrderJob"/>
+    </bean>
+	
+	 <!-- 定时任务抽奖活动 -->
+	<bean id="updateLotteryTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="updateLotteryStateTask"/>
+		<!-- 每隔1分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="updateLotteryStateTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="lotteryService"/>
+		<property name="targetMethod" value="updateLotteryStateJob"/>
+	</bean>
+
+	<!-- 定时主题皮肤推送 -->
+	<bean id="updateThemeTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="updateThemeStateTask"/>
+		<!-- 每隔1分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="updateThemeStateTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="interactionService"/>
+		<property name="targetMethod" value="updateThemeStateJob"/>
+	</bean>
+
+
+	<!-- 定时清理日志(每天清理一次) -->
+	<bean id="updateMonitoringTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="updateMonitoringStateTask"/>
+		<!-- 每隔1分钟 -->
+		<property name="cronExpression" value="0 0/1 * * * ?"/>
+	</bean>
+	<bean id="updateMonitoringStateTask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject" ref="monitoringService"/>
+		<property name="targetMethod" value="updateMonitoringStateJob"/>
+	</bean>
+
+</beans>

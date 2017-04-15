@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>设备管理</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" href="../css/app.css" />
+    <link rel="stylesheet" type="text/css" href="../lib/mobiscroll/mobiscroll.core-2.5.2.css">
+    <link rel="stylesheet" type="text/css" href="../lib/mobiscroll/mobiscroll.animation-2.5.2.css">
+    <link rel="stylesheet" type="text/css" href="../lib/mobiscroll/mobiscroll.android-ics-2.5.2.css">
+</head>
+<body>
+	<div class="device-list-ctn">
+		<div id="top-tip" class="top-tip"></div>
+		<!-- <div id="dateNav" class="date-nav">
+			<div class="item" style="text-align:left;"><span>日数据</span></div>
+			<div class="item"><span>月数据</span></div>
+			<div class="item" style="text-align:right"><span>汇总数据(年)</span></div>
+		</div>
+		<div class="date-select-ctn">
+			<div class="arrow date-arrow-l"></div>
+			<input id="dateSelect" class="date-select" type="text">
+			<div class="arrow date-arrow-r"></div>
+		</div> -->
+		<div id="device-list" style="margin:45px 0 43px;">
+			
+		</div>
+		<div id="load-more" class="load-more" style="position:fixed;">加载更多</div>
+	</div>
+	<div id="loading-tip" class="loading-tip">
+		<div class="square-spin inner">
+			<div></div>
+		</div>
+	</div>
+	<script type="text/javascript" src="../lib/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/common.js"></script>
+	<script type="text/javascript" src="../lib/template.js"></script>
+	<script type="text/javascript" src="../js/listLoader.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.core-2.5.2.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.core-2.5.2-zh.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.datetime-2.5.1.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.datetime-2.5.1-zh.js"></script>
+	<script type="text/javascript" src="../lib/mobiscroll/mobiscroll.android-ics-2.5.2.js"></script>
+	<script id="device-tmp" type="text/html">
+	{{each devices as device i}}
+		<div class="dev-item">
+			<div class="t">
+				<span>设备组号：{{device.factoryDevNo}}</span>
+				{{if device.isOffLine}}
+				<span class="state offline"><i class="sign"></i>离线</span>
+				{{else}}
+				<span class="state online"><i class="sign"></i>在线</span>
+				{{/if}}
+			</div>
+			<div class="row clearfix">
+				<label>设备类型：</label>
+				<span>{{device.typeStr}}</span>
+			</div>
+			<div class="row clearfix" style="border-top: 1px solid #e5e5e5;">
+				<label>设备地址：</label>
+				<span>{{device.pointAddress}}</span>
+			</div>
+		</div>
+	{{/each}}
+	</script>
+	<script type="text/javascript">
+		$(function() {
+
+			// var selectDate = WE.dateFormatter(new Date),  //选择的日期
+			// 	selectMonth = WE.monthFormatter(new Date),//选择的月份
+			// 	selectYear = WE.yearFormatter(new Date);  //选择的年份
+
+			//重设devicesLoader时间参数
+			// function setTimeParams(type) {
+			// 	if (type === 'date') {
+			// 		var range = WE.getDateRange(selectDate);
+			// 	} else if (type === 'month') {
+			// 		var range = WE.getMonthRange(selectMonth);
+			// 	} else if (type === 'year') {
+			// 		var range = WE.getYearRange(selectYear);
+			// 	}
+
+			// 	devicesLoader.setParams({startTime:range.startTime, endTime:range.endTime});
+			// }
+
+			//初始化日期选择器
+			// function initDatePicker(type) {
+			// 	var $dateSelect = $('#dateSelect');
+			// 	$dateSelect.scroller('destroy');
+
+			// 	var opt = {
+			// 		theme: "android-ics light",  
+			// 		preset: 'date',
+			// 		display: 'modal',
+			// 		mode: 'scroller',
+			// 		lang: 'zh',
+			// 		startYear: 2015,
+			// 		endYear: (new Date).getFullYear()
+			// 	}
+
+			// 	if (type === 'date') {
+			// 		opt.onSelect = function(value, inst) {
+			// 			if (new Date(value) > new Date) {
+			// 				WE.showTip('日期大于今日，无法获取数据！');
+			// 				$dateSelect.val(selectDate);
+			// 				return;
+			// 			}
+			// 			selectDate = value;
+			// 			devicesLoader.reset();
+			// 			setTimeParams(type);
+			// 			devicesLoader.loadData();
+			// 		};
+			// 		$dateSelect.val('').scroller(opt);
+			// 		$dateSelect.val(selectDate);
+			// 	} else if (type === 'month') {
+			// 		opt.onSelect = function(value, inst) {
+			// 			if (new Date(value + '-01') > new Date) {
+			// 				WE.showTip('月份大于本月，无法获取数据！');
+			// 				$dateSelect.val(selectMonth);
+			// 				return
+			// 			}
+			// 			selectMonth = value;
+			// 			devicesLoader.reset();
+			// 			setTimeParams(type);
+			// 			devicesLoader.loadData();	
+			// 		};
+			// 		opt.dateFormat = 'yyyy-mm';
+   //          		opt.dateOrder = 'yymm';
+			// 		$dateSelect.val('').scroller(opt);
+			// 		$dateSelect.val(selectMonth);
+			// 	} else if (type === 'year') {
+			// 		opt.onSelect = function(value, inst) {
+			// 			selectYear = value;
+			// 			devicesLoader.reset();
+			// 			setTimeParams(type);
+			// 			devicesLoader.loadData();
+			// 		};
+			// 		opt.dateFormat = 'yyyy';
+   //          		opt.dateOrder = 'yy';
+			// 		//$dateSelect.mobiscroll().date(opt);
+			// 		$dateSelect.val('').scroller(opt);
+			// 		$dateSelect.val(selectYear);
+			// 	}
+			// }
+
+			//初始化列表加载对象
+			var devicesLoader = new Listloader({
+				url: WE.getBaseURL() + '/wechat/findDeviceOperData.json',
+				pageSize: 20,
+				container: '#device-list',
+				template: '#device-tmp',
+				loadingTip: '#loading-tip',
+				field: {
+					pageSize: 'rows',
+					curPage: 'page',
+					list: 'devices'
+				},
+				berforeLoad: function() {
+					$('#load-more').html('加载中');
+				},
+				afterLoadSuccess: function(r){
+					$('#load-more').html('加载更多');
+					$('#top-tip').html('您当前共有'+r.devQty+'组设备，离线设备'+r.offlineDeviceCount+'组');
+				},
+				afterLoadedAll: function(r){
+					$('#load-more').html('已加载所有数据');
+				}
+			})
+
+			//加载更多
+			$('#load-more').click(function() {
+				devicesLoader.loadData();
+			})
+
+			//切换数据范围
+			// $('#dateNav').on('click', '.item span', function() {
+			// 	devicesLoader.reset();
+
+			// 	var type;
+			// 	var types = ['date', 'month', 'year'];
+			// 	var $item = $(this).parent();
+			// 	var index = $item.index();
+
+			// 	type = types[index];
+
+			// 	$item.addClass('active').siblings().removeClass('active');
+
+			// 	initDatePicker(type);
+
+			// 	setTimeParams(type);
+
+			// 	devicesLoader.loadData();
+			// })
+
+			//首次取数据
+			//$('#dateNav .item span').eq(0).trigger('click');
+			$('#load-more').trigger('click');
+
+		})
+	</script>
+</body>
+</html>

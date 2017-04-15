@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>视频上传</title>
+<style>
+table  {
+  border-collapse:separate;
+  border-spacing:0px 0px;
+}
+@-webkit-keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+@-moz-keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+@keyframes progressmove {
+    0% {
+       background-position: 0 0;
+    }
+    100% {
+       background-position: 17px 0;
+    }
+}
+.progress {
+    position: absolute;
+    width:150px;
+    height:16px;
+    text-align:center;
+    line-height:16px;
+    border: 1px solid #1483d8;
+    overflow:hidden;
+    border-radius:5px;
+    display:none;
+}
+.progress span.percentage {
+	width:0;
+    height:100%;
+    left:0px;
+    top:0px;
+    background: #1483d8;
+    position:absolute;
+    z-index:0;
+}
+.progress span.text {
+	position:relative;
+    z-index:1;
+    color: #6dbfff;
+    margin:10px 0px;
+}
+
+.file-panel {
+    position:absolute;z-index:1;width:100%;height:0px;background:rgba(0,0,0,0.5);top:0;left:0;float:right;filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#80000000', endColorstr='#80000000')\0;overflow:hidden;
+}
+.file-panel span {
+    background:url(../scripts/webuploader/icon/icons.png) no-repeat;width:24px;height:24px;float:right;display:inline;overflow:hidden;cursor:pointer;text-indent:-9999px;margin:3px 1px 1px;
+}
+.file-panel span.rotateLeft {
+    background-position:0px -24px;
+}
+.file-panel span.rotateLeft:hover {
+    background-position:0px 0px;
+}
+.file-panel span.rotateRight {
+    background-position:-24px -24px;
+}
+.file-panel span.rotateRight:hover {
+    background-position:-24px 0px;
+}
+.file-panel span.cancel {
+    background-position:-48px -24px;
+}
+.file-panel span.cancel:hover {
+    background-position:-48px 0px;
+}
+</style>
+<link rel="stylesheet" type="text/css" href="../scripts/webuploader/webuploader.css" />
+<script type="text/javascript" src="../scripts/easyui/jquery.min.js"></script>
+<script type="text/javascript" src="../scripts/webuploader/webuploader.min.js"></script>
+<script type="text/javascript">
+var uploadRoot, videoUploader, queueVideos = [], uploadFailed = [], delVideoIds = [], videoLimit = 1, dndArea = $("#dndArea").html().length;
+function initVideoUploader(callback, token, videoLimit) {
+    $('#dndArea').attr('style', 'width:' + 160 * videoLimit + 'px');
+    uploadRoot = parent._contextPath ? parent._contextPath : parent.parent._contextPath;
+	videoLimit = videoLimit == undefined ? 5 : videoLimit;
+	server = 'session/data/saveUploadFile.json';
+	videoUploader = WebUploader.create({
+		swf:uploadRoot + '/script/webuploader/Uploader.swf',
+		server:uploadRoot + "/" + server + (token == undefined ? '' : ('?_csrf=' + token)),
+		pick: '#filePicker',
+		dnd:'#dndArea',
+		fileVal:'file',
+		chunked:true,
+	    accept:{title:'预览图片',extensions:'mp4'},
+	    thumb:{quality:70,allowMagnify:false,crop:true},
+	    fileNumLimit:videoLimit,
+	    fileSingleSizeLimit:100 * 1024 * 1024	//100M
+	    //duplicate:true
+	});
+	var divs = $("#filePicker").find("div");
+	$(divs[0]).attr('style','padding:5px 5px;');
+	videoUploader.on('ready', function() {
+        window.uploader = videoUploader;
+    });
+	videoUploader.onFileQueued = function(file) {
+		if (videoLimit === 1)
+            $('#dndArea').html("");
+		
+		addUploadVideo(file);
+        queueVideos.push(file);
+        updateUploadVideoState('ready');
+    };
+	videoUploader.onFileDequeued = function(file) {
+        delUploadVideo(file);
+    	updateUploadVideoState('ready');
+    };
+	videoUploader.onUploadProgress = function(file, percentage) {
+		$('#rateNum').width(percentage * 100 + '%');
+		$('#rateText').text(percentage * 100 + '%');
+    };
+	videoUploader.onUploadError = function(file, reason) {
+		uploadFailed.push(file);
+    };
+	videoUploader.onUploadFinished = function(file) {
+		updateUploadVideoState('complete');
+        parent.closeRequestMask();
+        if (callback) {
+        	var info = $('#info').html();
+        	if (uploadFailed.length != 0)
+        		info = info + '</br>上传失败文件：';
+        	for (var i = 0; i < uploadFailed.length; i++) {
+        		if (i < uploadFailed.length - 1)
+        			info = info + '</br>';
+        		info = info + uploadFailed[i].name;
+        	}
+            if (uploadFailed.length < queueVideos.length);
+        		callback(videoUploader.option('formData').key, info);
+        }
+        uploadFailed.splice(0, uploadFailed.length);
+    };
+    videoUploader.onError = function(error) {
+        if (error == 'Q_EXCEED_NUM_LIMIT') {
+        	parent.errorMsg('最多只允许上传' + videoLimit + '个文件！');
+        } else if (error == 'Q_EXCEED_SIZE_LIMIT') {
+        	parent.errorMsg('超出最大上传文件大小' + videoUploader.options.fileSingleSizeLimit) + '！';
+        } else if (error == 'Q_TYPE_DENIED') {
+        	parent.errorMsg('不支持上传此文件类型！');
+        }
+        parent.closeRequestMask();
+    };
+}
+function addUploadVideo(file) {
+	$('#progress').hide();
+	$('#info').attr('style', 'display:inline-block;font-size:14px;color: #666666;');
+	var wrap = $('<div id="' + file.id + '" style="position:relative;display:inline;float:left;width:150px;height:70px;overflow:hidden;margin:2px 5px 2px;"></div>'), video;
+	video = $('<div class="preview-success"><div class="preview-title">' + file.name + '</div></div>');
+	var tool = $('<div class="file-panel"><span class="cancel"></span></div>');
+       $('#dndArea').append(wrap);
+       wrap.append(video);
+       wrap.append(tool);
+       wrap.on('mouseenter', function() {
+       	tool.stop().animate({height:24});
+       });
+       wrap.on('mouseleave', function() {
+       	tool.stop().animate({height:0});
+       });
+       file.rotation = 0;
+       tool.on( 'click', 'span', function() {
+           var index = $(this).index(),  deg;
+           switch (index) {
+               case 0:
+                   videoUploader.removeFile(file, true);
+                   return;
+           }
+       });
+}
+function delUploadVideo(file) {
+	$('#' + file.id).off().find('.file-panel').off().end().remove();
+	for (var i = 0; i < queueVideos.length; i++) {
+		if (queueVideos[i].id == file.id) {
+			queueVideos.splice(i, 1);
+			break;
+		}
+	}
+}
+function updateUploadVideoState(state) {
+    var text = '', stats;
+	var fileSize = 0;
+	for (var i = 0; i < queueVideos.length; i++)
+		fileSize += queueVideos[i].size;
+    if (state == 'ready') {
+        text = queueVideos.length == 0 ? '' : '选中' + queueVideos.length + '个文件，共' + WebUploader.formatSize(fileSize);
+    } else if ( state == 'confirm' ) {
+        stats = videoUploader.getStats();
+        if (stats.uploadFailNum)
+            text = '已成功上传' + stats.successNum+ '个文件，' + stats.uploadFailNum + '个文件上传失败，<a class="retry" href="#">重新上传</a>失败文件或<a class="ignore" href="#">忽略</a>';
+    } else {
+        stats = videoUploader.getStats();
+        text = '共' + queueVideos.length + '个' +  WebUploader.formatSize(fileSize)  + '，已上传' + stats.successNum + '个';
+        if (stats.uploadFailNum)
+            text += '，失败' + stats.uploadFailNum + '个';
+    }
+    $('#info').html(text);
+}
+function uploadVideos(data) {
+	$('#progress').show();
+	parent.openRequestMask();
+    $('#info').attr('style', 'display:inline-block;font-size:14px;color: #666666;margin:0px 0px 0px 160px;');
+    updateUploadVideoState('upload');
+    data.fileIds = delVideoIds;
+    videoUploader.option('formData', data);
+    videoUploader.upload();
+}
+function closeVideoUploader() {
+    queueVideos.splice(0, queueVideos.length);
+    delVideoIds.splice(0, delVideoIds.length);
+	videoUploader.reset();
+	videoUploader.option('fileNumLimit', videoLimit);
+	$('#dndArea').empty();
+	$('#progress').hide();
+	$('#info').html('');
+}
+
+function loadUploadVideo(ids, names, paths) {
+    if (ids && names && paths && ids.length != 0 && names.length != 0 && paths.length != 0) {
+        var url;
+        for (var i = 0; i < names.length; i++) {
+            var file = {id:'LOAD_' + $.trim(ids[i]),name:names[i],src:parent.getFileUrl(paths[i])};
+            addLoadVideo(file);
+        }
+        var count = videoUploader.option('fileNumLimit') - names.length;
+        videoUploader.option('fileNumLimit', count);
+    }
+}
+
+function addLoadVideo(file) {
+	$('#progress').hide();
+    $('#info').attr('style', 'display:inline-block;font-size:14px;color: #666666;');
+    var wrap = $('<div id="' + file.id + '" style="position:relative;display:inline;float:left;width:150px;height:70px;overflow:hidden;margin:2px 5px 2px;"></div>'), video;
+    video = $('<div class="preview-success"><div class="preview-title">' + file.name + '</div></div>');
+    var tool = $('<div class="file-panel"><span class="cancel"></span></div>');
+       $('#dndArea').append(wrap);
+       wrap.append(video);
+       wrap.append(tool);
+       wrap.on('mouseenter', function() {
+        tool.stop().animate({height:24});
+       });
+       wrap.on('mouseleave', function() {
+        tool.stop().animate({height:0});
+       });
+       file.rotation = 0;
+       tool.on( 'click', 'span', function() {
+           var index = $(this).index(),  deg;
+           switch (index) {
+               case 0:
+                   videoUploader.removeFile(file, true);
+                   return;
+           }
+       });
+}
+</script>
+</head>
+<body>
+<table>
+	<tr><td style="width:80px;padding:0px 0px;margin:0px 0px;"><span id="filePicker" style="font-size:12px;">请选择视频</span></td><td><div id="progress" class="progress"><span id='rateText' class="text">0%</span><span id='rateNum' class="percentage"></span></div><div id="info" style="display:inline-block;font-size:14px;color: #666666;"></div></td></tr>
+	<tr><td colspan="2"><div id="dndArea"></div></td></tr>
+</table>
+</body>
+</html>

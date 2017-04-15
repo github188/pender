@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>压缩包上传</title>
+	<link rel="stylesheet" type="text/css" href="../scripts/webuploader/webuploader.css" />
+	<script type="text/javascript" src="../scripts/easyui/jquery.min.js"></script>
+	<script type="text/javascript" src="../scripts/webuploader/webuploader.min.js"></script>
+	<style type="text/css">
+		.webuploader-pick {padding: 5px; font-size: 12px;}
+		.del {float: right; color: #009cd3; cursor: pointer;}
+		.del:hover {text-decoration: underline;}
+		#progress-ctn {display: none; margin-top: 8px;}
+		#progress {display: inline-block; width: 200px; height: 14px; border: 1px solid #e5e5e5; border-radius: 4px;}
+		#progress span {display: block; height: 100%; width: 0; background: #009cd3; border-radius: 4px;}
+		#percentage {float: right; display: inline-block; font-size: 14px; line-height: 16px; vertical-align: text-top;}
+	</style>
+</head>
+<body>
+	<div id="filePicker">选择文件</div>
+	<div id="name"></div>
+	<div id="progress-ctn">
+		<div id="progress"><span></span></div>
+		<div id="percentage"></div>
+	</div>
+	<script type="text/javascript">
+		var uploader,
+			root = parent._contextPath ? parent._contextPath : parent.parent._contextPath,
+			server = 'session/data/saveUploadFile.json';
+
+		function initUploader(callback, token) {
+			uploader = WebUploader.create({
+				swf: root + '/script/webuploader/Uploader.swf',
+				server: root + "/" + server + (typeof token == 'undefined' ? '' : ('?_csrf=' + token)),
+				pick: '#filePicker',
+				chunked:true,
+				accept:{title:'预览图片',extensions:'zip,rar,apk'},
+				fileNumLimit: 1
+			})
+
+			uploader.on('fileQueued', function(file) {
+				$('#name').html(file.name + '<span class="del">删除</span>');
+			})
+
+			uploader.on( 'uploadProgress', function( file, percentage ) {
+			    $('#progress-ctn').show();
+			    $('#progress span').css('width', percentage * 100 + '%');
+			    $('#percentage').html(percentage * 100 + '%');
+			});
+
+			uploader.on('uploadSuccess', function() {
+				if(callback) callback();
+				resetUpload();
+			    parent.closeRequestMask();
+			})
+
+			uploader.on('error', function(err) {
+				if (err == 'Q_EXCEED_NUM_LIMIT') {
+		        	parent.errorMsg('文件数量超出！');
+		        } else if (err == 'Q_EXCEED_SIZE_LIMIT') {
+		        	parent.errorMsg('文件过大！');
+		        } else if (err == 'Q_TYPE_DENIED') {
+		        	parent.errorMsg('不支持上传此文件类型！');
+		        }
+		        parent.closeRequestMask();
+			})
+		}
+
+		function uploadCompresser(data) {
+			uploader.option('formData', data);
+			uploader.upload();
+			parent.openRequestMask();
+		} 
+
+		function resetUpload() {
+			$('#progress-ctn').hide();
+		    $('#progress span').css('width', '0%');
+		    $('#name').html('');
+		    uploader.reset();
+		}
+
+		$('#name').on('click', '.del', function() {
+			var file = uploader.getFiles()[0];
+			uploader.removeFile(file, true);
+			$('#name').html('');
+		})
+	</script>
+</body>
+</html>
